@@ -25,28 +25,17 @@ public class FilmController {
 
     @PostMapping
     public ResponseEntity<Film> addNewFilm(@Valid @RequestBody Film film) throws ValidationException {
-        int id = idCounter++;
+        int id = generateNewId();
+
         film.setId(id);
-        boolean isPresent = filmsMap.containsKey(id);
+        filmsMap.put(id, film);
+        log.debug("Добавлен новый фильм: {}", film);
+        return new ResponseEntity<>(film, HttpStatus.CREATED);
 
-        if (!isPresent) {
-            filmsMap.put(id, film);
-            log.debug("Добавлен новый фильм: {}", film);
-            return new ResponseEntity<>(filmsMap.get(id), HttpStatus.CREATED);
-
-        } else {
-            String errorMessage = String.format("Добавляемый фильм с id=%d уже существует.", id);
-            log.debug("Ошибка при добавлении нового фильма: " + errorMessage);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    errorMessage,
-                    new ValidationException(errorMessage));
-        }
     }
 
-    @PutMapping
-    public ResponseEntity<Film> updateFilm(@Valid @RequestBody Film film) throws ValidationException {
-        int id = film.getId();
+    @PutMapping("/")
+    public ResponseEntity<Film> updateFilm(@Valid @RequestBody Film film, @RequestParam int id) throws ValidationException {
 
         if (filmsMap.containsKey(id)) {
             filmsMap.put(id, film);
@@ -55,7 +44,7 @@ public class FilmController {
 
         } else {
             String errorMessage = String.format("Заменяемый фильм с id=%d не найден.", id);
-            log.debug("Ошибка при обновлении информации о фильме: " + errorMessage);
+            log.debug("Ошибка при обновлении информации о фильме с id={}", id);
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     errorMessage,
@@ -65,6 +54,10 @@ public class FilmController {
 
     @GetMapping
     public ResponseEntity<List<Film>> getFilmsList() {
-        return new ResponseEntity<>(List.copyOf(filmsMap.values()), HttpStatus.OK);
+        return ResponseEntity.ok(List.copyOf(filmsMap.values()));
+    }
+
+    private int generateNewId() {
+        return idCounter++;
     }
 }

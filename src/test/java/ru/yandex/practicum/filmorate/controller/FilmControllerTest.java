@@ -1,15 +1,16 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
-import ru.yandex.practicum.filmorate.FilmorateApplicationTests;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
@@ -17,35 +18,35 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class FilmControllerTest {
 
-    private static final String context = "/films";
-    private static final String testURI = FilmorateApplicationTests.BASE_URL + context;
+    @LocalServerPort
+    private int port;
 
-    private final TestRestTemplate restTemplate = new TestRestTemplate();
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     @Test
     public void addNewFilmTest() {
         Film film = makeDefaultFilm();
-        Film filmWithId = makeDefaultFilm(1);
-        ResponseEntity<Film> response = restTemplate.postForEntity(testURI, film, Film.class);
+        ResponseEntity<Film> response = restTemplate.postForEntity(getActualURI(), film, Film.class);
+        film.setId(1);
 
-        assertEquals(filmWithId, response.getBody());
+        assertEquals(film, response.getBody());
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
     }
 
     @Test
     public void shouldNotAddFilmWithInvalidName() {
         Film filmWithWrongName = makeCustomFilm(
-                null,
                 "",
                 null,
                 null,
                 null);
         assertEquals(HttpStatus.BAD_REQUEST,
-                restTemplate.postForEntity(testURI, filmWithWrongName, Film.class).getStatusCode());
+                restTemplate.postForEntity(getActualURI(), filmWithWrongName, Film.class).getStatusCode());
     }
 
     @Test
@@ -53,13 +54,12 @@ public class FilmControllerTest {
         String tooLongDescription = "1".repeat(201);
         Film filmWithWrongDescription = makeCustomFilm(
                 null,
-                null,
                 tooLongDescription,
                 null,
                 null);
 
         assertEquals(HttpStatus.BAD_REQUEST,
-                restTemplate.postForEntity(testURI, filmWithWrongDescription, Film.class).getStatusCode());
+                restTemplate.postForEntity(getActualURI(), filmWithWrongDescription, Film.class).getStatusCode());
     }
 
     @Test
@@ -68,12 +68,11 @@ public class FilmControllerTest {
         Film filmWithWrongDescription = makeCustomFilm(
                 null,
                 null,
-                null,
                 tooLongAgo,
                 null);
 
         assertEquals(HttpStatus.BAD_REQUEST,
-                restTemplate.postForEntity(testURI, filmWithWrongDescription, Film.class).getStatusCode());
+                restTemplate.postForEntity(getActualURI(), filmWithWrongDescription, Film.class).getStatusCode());
     }
 
     @Test
@@ -82,11 +81,10 @@ public class FilmControllerTest {
                 null,
                 null,
                 null,
-                null,
                 -1);
 
         assertEquals(HttpStatus.BAD_REQUEST,
-                restTemplate.postForEntity(testURI, filmWithWrongDescription, Film.class).getStatusCode());
+                restTemplate.postForEntity(getActualURI(), filmWithWrongDescription, Film.class).getStatusCode());
     }
 
     @Test
@@ -94,25 +92,24 @@ public class FilmControllerTest {
     public void updateFilmTest() {
         Film film = addDefaultFilm();
         ResponseEntity<Film> response = restTemplate.exchange(
-                testURI,
+                getActualURIWithQuery(),
                 HttpMethod.PUT,
                 new HttpEntity<>(film),
-                Film.class);
+                Film.class,
+                1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(film, response.getBody());
     }
 
-    /*      TODO: 09.08.2022 Тест вызывает ошибку SocketException: Unexpected end of file from server
-             при запуске с другими тестами, использующими exchange.
-             TODO: Изменить ответ от сервера и посмотреть разницу. */
     @Test
     public void shouldNotUpdateNonexistentFilm() {
         Film film = makeDefaultFilm(1);
         ResponseEntity<Film> response = restTemplate.exchange(
-                testURI,
+                getActualURIWithQuery(),
                 HttpMethod.PUT,
                 new HttpEntity<>(film),
-                Film.class);
+                Film.class,
+                1);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
@@ -121,7 +118,7 @@ public class FilmControllerTest {
     public void getFilmsTest() {
         Film film = addDefaultFilm();
         ResponseEntity<List<Film>> response = restTemplate.exchange(
-                testURI,
+                getActualURI(),
                 HttpMethod.GET,
                 new HttpEntity<>(null),
                 new ParameterizedTypeReference<>() {
@@ -144,10 +141,7 @@ public class FilmControllerTest {
         return film;
     }
 
-    private Film makeCustomFilm(Integer id, String name, String description, LocalDate date, Integer duration) {
-        if (id == null) {
-            id = 0;
-        }
+    private Film makeCustomFilm(String name, String description, LocalDate date, Integer duration) {
         if (name == null) {
             name = "nisi eiusmod";
         }
@@ -162,7 +156,6 @@ public class FilmControllerTest {
         }
 
         return new Film(
-                id,
                 name,
                 description,
                 date,
@@ -170,6 +163,14 @@ public class FilmControllerTest {
     }
 
     private Film addDefaultFilm() {
-        return restTemplate.postForObject(testURI, makeDefaultFilm(), Film.class);
+        return restTemplate.postForObject(getActualURI(), makeDefaultFilm(), Film.class);
+    }
+
+    private String getActualURI() {
+        return "http://localhost:" + port + "/films";
+    }
+
+    private String getActualURIWithQuery() {
+        return getActualURI() + "/?id={id}";
     }
 }

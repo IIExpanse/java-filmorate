@@ -13,6 +13,6 @@ public class NoWhitespaceValidator implements ConstraintValidator<NoWhitespaceCo
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        return !value.contains(" ");
+        return value != null && !value.contains(" ");
     }
 }

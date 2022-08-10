@@ -25,39 +25,29 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> addNewUser(@Valid @RequestBody User user) throws ValidationException {
-        int id = idCounter++;
-        user.setId(id);
         checkName(user);
+        int id = generateNewId();
 
-        if (!usersMap.containsKey(id)) {
-            usersMap.put(id, user);
-            log.debug("Добавлен новый пользователь: {}", user);
-            return new ResponseEntity<>(usersMap.get(id), HttpStatus.CREATED);
-
-        } else {
-            String errorMessage = String.format("Добавляемый пользователь с id=%d уже существует", id);
-            log.debug("Ошибка при добавлении нового пользователя" + errorMessage);
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    errorMessage,
-                    new ValidationException(errorMessage));
-        }
+        user.setId(id);
+        usersMap.put(id, user);
+        log.debug("Добавлен новый пользователь: {}", user);
+        return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 
-    @PutMapping
-    public ResponseEntity<User> updateUser(@Valid @RequestBody User user) throws ValidationException {
+    @PutMapping("/")
+    public ResponseEntity<User> updateUser(@Valid @RequestBody User user, @RequestParam int id) throws ValidationException {
         checkName(user);
-        int id = user.getId();
         boolean isPresent = usersMap.containsKey(id);
 
         if (isPresent) {
+            user.setId(id);
             usersMap.put(id, user);
             log.debug("Обновлена информация о пользователе: {}", user);
             return new ResponseEntity<>(usersMap.get(id), HttpStatus.OK);
 
         } else {
             String errorMessage = String.format("Заменяемый пользователь с id=%d не найден.", id);
-            log.debug("Ошибка при обновлении информации о пользователе: " + errorMessage);
+            log.debug("Ошибка при обновлении информации о пользователе с id={}", id);
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     errorMessage,
@@ -67,13 +57,18 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<User>> getUsersList() {
-        return new ResponseEntity<>(List.copyOf(usersMap.values()), HttpStatus.OK);
+        return ResponseEntity.ok(List.copyOf(usersMap.values()));
     }
 
     private static void checkName(User user) {
-        if (user.getName().isBlank()) {
+        String name = user.getName();
+        if (name == null || name.isBlank()) {
             user.setName(user.getLogin());
         }
         log.debug("Пустое имя пользователя с id={} изменено на значение логина.", user.getId());
+    }
+
+    private int generateNewId() {
+        return idCounter++;
     }
 }

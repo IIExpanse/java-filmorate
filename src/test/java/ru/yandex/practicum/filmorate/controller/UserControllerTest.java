@@ -1,15 +1,16 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
-import ru.yandex.practicum.filmorate.FilmorateApplicationTests;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -17,71 +18,65 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class UserControllerTest {
 
-    private static final String context = "/users";
-    private static final String testURI = FilmorateApplicationTests.BASE_URL + context;
+    @LocalServerPort
+    private int port;
 
-    private final TestRestTemplate restTemplate = new TestRestTemplate();
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     @Test
     public void addNewUserTest() {
         User user = makeDefaultUser();
-        User userWithId = makeDefaultUser(1);
-        ResponseEntity<User> response = restTemplate.postForEntity(testURI, user, User.class);
+        ResponseEntity<User> response = restTemplate.postForEntity(getActualURI(), user, User.class);
+        user.setId(1);
+        user.setName(user.getLogin());
 
-        assertEquals(userWithId, response.getBody());
+        assertEquals(user, response.getBody());
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
     }
 
     @Test
     public void shouldNotAddUserWithInvalidEmail() {
         User userWithWrongEmail = makeCustomUser(
-                null,
                 "mail",
-                null,
                 null,
                 null);
         assertEquals(HttpStatus.BAD_REQUEST,
-                restTemplate.postForEntity(testURI, userWithWrongEmail, User.class).getStatusCode());
+                restTemplate.postForEntity(getActualURI(), userWithWrongEmail, User.class).getStatusCode());
     }
 
     @Test
     public void shouldNotAddUserWithInvalidWhitespaceLogin() {
         User userWithWrongEmail = makeCustomUser(
                 null,
-                null,
                 "lo gin",
-                null,
                 null);
         assertEquals(HttpStatus.BAD_REQUEST,
-                restTemplate.postForEntity(testURI, userWithWrongEmail, User.class).getStatusCode());
+                restTemplate.postForEntity(getActualURI(), userWithWrongEmail, User.class).getStatusCode());
     }
 
     @Test
     public void shouldNotAddUserWithInvalidBlankLogin() {
         User userWithWrongEmail = makeCustomUser(
                 null,
-                null,
                 "",
-                null,
                 null);
         assertEquals(HttpStatus.BAD_REQUEST,
-                restTemplate.postForEntity(testURI, userWithWrongEmail, User.class).getStatusCode());
+                restTemplate.postForEntity(getActualURI(), userWithWrongEmail, User.class).getStatusCode());
     }
 
     @Test
     public void shouldReplaceBlankNameWithLogin() {
         User userWithWrongEmail = makeCustomUser(
                 null,
-                null,
                 "login",
-                "",
                 null);
         assertEquals("login",
-                restTemplate.postForEntity(testURI, userWithWrongEmail, User.class).getBody().getName());
+                restTemplate.postForEntity(getActualURI(), userWithWrongEmail, User.class).getBody().getName());
     }
 
     @Test
@@ -89,21 +84,20 @@ public class UserControllerTest {
         User userWithWrongEmail = makeCustomUser(
                 null,
                 null,
-                null,
-                null,
                 LocalDate.ofYearDay(40000, 20));
         assertEquals(HttpStatus.BAD_REQUEST,
-                restTemplate.postForEntity(testURI, userWithWrongEmail, User.class).getStatusCode());
+                restTemplate.postForEntity(getActualURI(), userWithWrongEmail, User.class).getStatusCode());
     }
 
     @Test
     public void updateUserTest() {
         User user = addDefaultUser();
         ResponseEntity<User> response = restTemplate.exchange(
-                testURI,
+                getActualURIWithQuery(),
                 HttpMethod.PUT,
                 new HttpEntity<>(user),
-                User.class);
+                User.class,
+                1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(user, response.getBody());
     }
@@ -112,10 +106,11 @@ public class UserControllerTest {
     public void shouldNotUpdateNonexistentUser() {
         User user = makeDefaultUser(1);
         ResponseEntity<User> response = restTemplate.exchange(
-                testURI,
+                getActualURIWithQuery(),
                 HttpMethod.PUT,
                 new HttpEntity<>(user),
-                User.class);
+                User.class,
+                1);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
@@ -123,7 +118,7 @@ public class UserControllerTest {
     public void getUsersTest() {
         User user = addDefaultUser();
         ResponseEntity<List<User>> response = restTemplate.exchange(
-                testURI,
+                getActualURI(),
                 HttpMethod.GET,
                 new HttpEntity<>(null),
                 new ParameterizedTypeReference<>() {
@@ -136,7 +131,6 @@ public class UserControllerTest {
         return new User(
                 "mail@mail.ru",
                 "NickName",
-                "dolore",
                 LocalDate.parse("1946-08-20")
         );
     }
@@ -147,32 +141,32 @@ public class UserControllerTest {
         return user;
     }
 
-    private User makeCustomUser(Integer id, String email, String login, String name, LocalDate birthday) {
-        if (id == null) {
-            id = 0;
-        }
+    private User makeCustomUser(String email, String login, LocalDate birthday) {
         if (email == null) {
             email = "mail@mail.ru";
         }
         if (login == null) {
             login = "Nick Name";
         }
-        if (name == null) {
-            name = "dolore";
-        }
         if (birthday == null) {
             birthday = LocalDate.parse("1946-08-20");
         }
 
         return new User(
-                id,
                 email,
                 login,
-                name,
                 birthday);
     }
 
     private User addDefaultUser() {
-        return restTemplate.postForObject(testURI, makeDefaultUser(), User.class);
+        return restTemplate.postForObject(getActualURI(), makeDefaultUser(), User.class);
+    }
+
+    private String getActualURI() {
+        return "http://localhost:" + port + "/users";
+    }
+
+    private String getActualURIWithQuery() {
+        return getActualURI() + "/?id={id}";
     }
 }

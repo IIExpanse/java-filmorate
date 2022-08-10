@@ -34,7 +34,7 @@ public class FilmController {
 
     }
 
-    @PutMapping("/")
+    @PutMapping
     public ResponseEntity<Film> updateFilm(@Valid @RequestBody Film film, @RequestParam int id) throws ValidationException {
 
         if (filmsMap.containsKey(id)) {

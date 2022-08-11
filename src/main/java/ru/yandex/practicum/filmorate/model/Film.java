@@ -16,7 +16,7 @@ public class Film {
     private final String name;
     @Size(max = 200)
     private final String description;
-    @ReleaseDateConstraint(earliestPossibleDate = "1895-12-28")
+    @ReleaseDateConstraint(year = 1895, month = 12, day = 28)
     private final LocalDate releaseDate;
     @Positive
     private final int duration;

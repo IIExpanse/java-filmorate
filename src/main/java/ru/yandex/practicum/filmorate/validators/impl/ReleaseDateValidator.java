@@ -12,7 +12,10 @@ public class ReleaseDateValidator implements ConstraintValidator<ReleaseDateCons
 
     @Override
     public void initialize(ReleaseDateConstraint constraintAnnotation) {
-        earliestPossibleDate = LocalDate.parse(constraintAnnotation.earliestPossibleDate()[0]);
+        earliestPossibleDate = LocalDate.of(
+                constraintAnnotation.year()[0],
+                constraintAnnotation.month()[0],
+                constraintAnnotation.day()[0]);
         ConstraintValidator.super.initialize(constraintAnnotation);
     }
 

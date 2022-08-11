@@ -35,7 +35,8 @@ public class FilmController {
     }
 
     @PutMapping
-    public ResponseEntity<Film> updateFilm(@Valid @RequestBody Film film, @RequestParam int id) throws ValidationException {
+    public ResponseEntity<Film> updateFilm(@Valid @RequestBody Film film) throws ValidationException {
+        int id = film.getId();
 
         if (filmsMap.containsKey(id)) {
             filmsMap.put(id, film);

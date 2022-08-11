@@ -93,11 +93,10 @@ public class UserControllerTest {
     public void updateUserTest() {
         User user = addDefaultUser();
         ResponseEntity<User> response = restTemplate.exchange(
-                getActualURIWithQuery(),
+                getActualURI(),
                 HttpMethod.PUT,
                 new HttpEntity<>(user),
-                User.class,
-                1);
+                User.class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(user, response.getBody());
     }
@@ -106,11 +105,10 @@ public class UserControllerTest {
     public void shouldNotUpdateNonexistentUser() {
         User user = makeDefaultUser(1);
         ResponseEntity<User> response = restTemplate.exchange(
-                getActualURIWithQuery(),
+                getActualURI(),
                 HttpMethod.PUT,
                 new HttpEntity<>(user),
-                User.class,
-                1);
+                User.class);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
@@ -164,9 +162,5 @@ public class UserControllerTest {
 
     private String getActualURI() {
         return "http://localhost:" + port + "/users";
-    }
-
-    private String getActualURIWithQuery() {
-        return getActualURI() + "/?id={id}";
     }
 }

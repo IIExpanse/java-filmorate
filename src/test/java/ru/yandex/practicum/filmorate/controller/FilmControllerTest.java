@@ -88,15 +88,13 @@ public class FilmControllerTest {
     }
 
     @Test
-//    @Disabled
     public void updateFilmTest() {
         Film film = addDefaultFilm();
         ResponseEntity<Film> response = restTemplate.exchange(
-                getActualURIWithQuery(),
+                getActualURI(),
                 HttpMethod.PUT,
                 new HttpEntity<>(film),
-                Film.class,
-                1);
+                Film.class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(film, response.getBody());
     }
@@ -105,16 +103,14 @@ public class FilmControllerTest {
     public void shouldNotUpdateNonexistentFilm() {
         Film film = makeDefaultFilm(1);
         ResponseEntity<Film> response = restTemplate.exchange(
-                getActualURIWithQuery(),
+                getActualURI(),
                 HttpMethod.PUT,
                 new HttpEntity<>(film),
-                Film.class,
-                1);
+                Film.class);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
-//    @Disabled
     public void getFilmsTest() {
         Film film = addDefaultFilm();
         ResponseEntity<List<Film>> response = restTemplate.exchange(
@@ -168,9 +164,5 @@ public class FilmControllerTest {
 
     private String getActualURI() {
         return "http://localhost:" + port + "/films";
-    }
-
-    private String getActualURIWithQuery() {
-        return getActualURI() + "/?id={id}";
     }
 }

@@ -20,5 +20,9 @@ public @interface ReleaseDateConstraint {
 
     Class<? extends Payload>[] payload() default {};
 
-    String[] earliestPossibleDate() default {};
+    int[] year() default {};
+
+    int[] month() default {};
+
+    int[] day() default {};
 }

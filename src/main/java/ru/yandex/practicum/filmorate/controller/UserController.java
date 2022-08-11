@@ -35,8 +35,9 @@ public class UserController {
     }
 
     @PutMapping
-    public ResponseEntity<User> updateUser(@Valid @RequestBody User user, @RequestParam int id) throws ValidationException {
+    public ResponseEntity<User> updateUser(@Valid @RequestBody User user) throws ValidationException {
         checkName(user);
+        int id = user.getId();
         boolean isPresent = usersMap.containsKey(id);
 
         if (isPresent) {

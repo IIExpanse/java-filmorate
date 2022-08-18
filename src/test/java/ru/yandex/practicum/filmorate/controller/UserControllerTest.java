@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.controllers;
+package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -251,8 +251,10 @@ public class UserControllerTest {
 
     private User makeDefaultUser() {
         return new User(
+                0,
                 "mail@mail.ru",
                 "NickName",
+                "",
                 LocalDate.parse("1946-08-20")
         );
     }
@@ -275,8 +277,10 @@ public class UserControllerTest {
         }
 
         return new User(
+                0,
                 email,
                 login,
+                "",
                 birthday);
     }
 

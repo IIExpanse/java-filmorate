@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.service.film.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
@@ -12,13 +12,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class InMemoryFilmService implements FilmService {
 
     private final FilmStorage storage;
 
-    @Autowired
-    public InMemoryFilmService(FilmStorage storage) {
-        this.storage = storage;
+    @Override
+    public Film getFilm(int id) {
+        return storage.getFilm(id);
+    }
+
+    @Override
+    public Collection<Film> getFilms() {
+        return storage.getFilms();
     }
 
     @Override
@@ -42,6 +48,16 @@ public class InMemoryFilmService implements FilmService {
     public void addLike(int targetFilmId, int userId) {
         Film film = storage.getFilm(targetFilmId);
         film.addLike(userId);
+    }
+
+    @Override
+    public void addFilm(Film film) {
+        storage.addFilm(film);
+    }
+
+    @Override
+    public void updateFilm(Film film, int id) {
+        storage.updateFilm(film, id);
     }
 
     @Override

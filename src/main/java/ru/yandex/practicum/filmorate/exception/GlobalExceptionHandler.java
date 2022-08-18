@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.exceptions;
+package ru.yandex.practicum.filmorate.exception;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -6,13 +6,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import ru.yandex.practicum.filmorate.exceptions.films.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.friends.CantAddSelfException;
-import ru.yandex.practicum.filmorate.exceptions.friends.FriendAlreadyAddedException;
-import ru.yandex.practicum.filmorate.exceptions.friends.FriendNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.likes.LikeAlreadyAddedException;
-import ru.yandex.practicum.filmorate.exceptions.likes.LikeNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.users.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
+import ru.yandex.practicum.filmorate.exception.friend.FriendAlreadyAddedException;
+import ru.yandex.practicum.filmorate.exception.friend.FriendNotFoundException;
+import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
+import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
+import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 
 @ControllerAdvice
 @Slf4j
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
             LikeAlreadyAddedException.class,
             CantAddSelfException.class
     })
-    public ResponseEntity<ErrorResponse> handleAlreadyAdded(final RuntimeException e) {
+    public ResponseEntity<ErrorResponse> handleAlreadyAddedExceptions(final RuntimeException e) {
         String exceptionName = e.getClass().getName();
         exceptionName = exceptionName.substring(exceptionName.lastIndexOf("."));
         log.debug(e.getMessage());

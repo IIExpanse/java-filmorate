@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.exceptions.likes;
+package ru.yandex.practicum.filmorate.exception.like;
 
 public class LikeNotFoundException extends RuntimeException {
 

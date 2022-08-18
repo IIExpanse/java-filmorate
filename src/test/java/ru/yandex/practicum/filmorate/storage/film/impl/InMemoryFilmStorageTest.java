@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.storage.film.impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.films.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
@@ -18,10 +18,12 @@ public class InMemoryFilmStorageTest {
     @BeforeEach
     public void refreshFilmAndStorage() {
         film = new Film(
+                0,
                 "nisi eiusmod",
                 "adipisicing",
                 LocalDate.parse("1967-03-25"),
-                100);
+                100,
+                0);
         storage = new InMemoryFilmStorage();
     }
 
@@ -46,10 +48,12 @@ public class InMemoryFilmStorageTest {
     public void updateFilmTest() {
         storage.addFilm(film);
         film = new Film(
+                0,
                 "updatedFilm",
                 "adipisicing",
                 LocalDate.parse("1967-03-25"),
-                100);
+                100,
+                0);
         storage.updateFilm(film, 1);
         assertEquals("updatedFilm", storage.getFilm(1).getName());
     }

@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import ru.yandex.practicum.filmorate.exceptions.friends.CantAddSelfException;
-import ru.yandex.practicum.filmorate.exceptions.friends.FriendAlreadyAddedException;
-import ru.yandex.practicum.filmorate.exceptions.friends.FriendNotFoundException;
-import ru.yandex.practicum.filmorate.validators.NoWhitespaceConstraint;
+import lombok.NoArgsConstructor;
+import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
+import ru.yandex.practicum.filmorate.exception.friend.FriendAlreadyAddedException;
+import ru.yandex.practicum.filmorate.exception.friend.FriendNotFoundException;
+import ru.yandex.practicum.filmorate.validator.NoWhitespaceConstraint;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -15,18 +17,20 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     private int id;
     @NotBlank
     @Email
-    private final String email;
+    private String email;
     @NotBlank
     @NoWhitespaceConstraint
-    private final String login;
+    private String login;
     private String name;
     @PastOrPresent
-    private final LocalDate birthday;
+    private LocalDate birthday;
     @JsonIgnore
     private final Set<Integer> friendsIds = new HashSet<>();
 

@@ -2,8 +2,8 @@ package ru.yandex.practicum.filmorate.service.film.impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.likes.LikeAlreadyAddedException;
-import ru.yandex.practicum.filmorate.exceptions.likes.LikeNotFoundException;
+import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
+import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -23,10 +23,12 @@ public class InMemoryFilmServiceTest {
     @BeforeEach
     public void refreshFields() {
         film = new Film(
+                0,
                 "nisi eiusmod",
                 "adipisicing",
                 LocalDate.parse("1967-03-25"),
-                100);
+                100,
+                0);
         storage = new InMemoryFilmStorage();
         service = new InMemoryFilmService(storage);
         storage.addFilm(film);
@@ -59,10 +61,12 @@ public class InMemoryFilmServiceTest {
     @Test
     public void getPopularFilmsTest() {
         Film film1 = new Film(
+                0,
                 "another film",
                 "test film",
                 LocalDate.parse("1989-03-25"),
-                100);
+                100,
+                0);
         storage.addFilm(film1);
         film.addLike(1);
         assertTrue(service.getPopularFilms(10).contains(film));

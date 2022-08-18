@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.exceptions.friends;
+package ru.yandex.practicum.filmorate.exception.friend;
 
 public class FriendNotFoundException extends RuntimeException {
 

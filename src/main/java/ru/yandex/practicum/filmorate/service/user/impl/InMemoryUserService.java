@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service.user.impl;
 
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
@@ -10,12 +11,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class InMemoryUserService implements UserService {
 
     private final UserStorage storage;
 
-    public InMemoryUserService(UserStorage storage) {
-        this.storage = storage;
+    @Override
+    public User getUser(int id) {
+        return storage.getUser(id);
+    }
+
+    @Override
+    public Collection<User> getUsers() {
+        return storage.getUsers();
     }
 
     @Override
@@ -41,12 +49,22 @@ public class InMemoryUserService implements UserService {
     }
 
     @Override
+    public void addUser(User user) {
+        storage.addUser(user);
+    }
+
+    @Override
     public void addFriend(int targetUserId, int friendId) {
         User user = storage.getUser(targetUserId);
         User friend = storage.getUser(friendId);
 
         user.addFriend(friendId);
         friend.addFriend(targetUserId);
+    }
+
+    @Override
+    public void updateUser(User user, int id) {
+        storage.updateUser(user, id);
     }
 
     @Override

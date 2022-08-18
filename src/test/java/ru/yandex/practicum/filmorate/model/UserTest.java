@@ -2,9 +2,9 @@ package ru.yandex.practicum.filmorate.model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.friends.CantAddSelfException;
-import ru.yandex.practicum.filmorate.exceptions.friends.FriendAlreadyAddedException;
-import ru.yandex.practicum.filmorate.exceptions.friends.FriendNotFoundException;
+import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
+import ru.yandex.practicum.filmorate.exception.friend.FriendAlreadyAddedException;
+import ru.yandex.practicum.filmorate.exception.friend.FriendNotFoundException;
 
 import java.time.LocalDate;
 
@@ -17,8 +17,10 @@ public class UserTest {
     @BeforeEach
     public void refreshUser() {
         user = new User(
+                0,
                 "mail@mail.ru",
                 "NickName",
+                "",
                 LocalDate.parse("1946-08-20"));
     }
 

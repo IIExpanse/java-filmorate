@@ -1,14 +1,13 @@
-package ru.yandex.practicum.filmorate.controllers;
+package ru.yandex.practicum.filmorate.controller;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import javax.validation.Valid;
 import java.util.Collection;
@@ -17,25 +16,19 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/users")
 @Slf4j
+@AllArgsConstructor
 public class UserController {
 
-    private final UserStorage storage;
     private final UserService service;
-
-    @Autowired
-    public UserController(UserStorage storage, UserService service) {
-        this.storage = storage;
-        this.service = service;
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable int id) {
-        return ResponseEntity.ok(storage.getUser(id));
+        return ResponseEntity.ok(service.getUser(id));
     }
 
     @GetMapping
     public ResponseEntity<Collection<User>> getUsersList() {
-        return ResponseEntity.ok(storage.getUsers());
+        return ResponseEntity.ok(service.getUsers());
     }
 
     @GetMapping("/{id}/friends")
@@ -50,7 +43,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> addNewUser(@Valid @RequestBody User user) {
-        storage.addUser(user);
+        service.addUser(user);
         checkName(user);
         log.debug("Добавлен новый пользователь: {}", user);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
@@ -60,7 +53,7 @@ public class UserController {
     public ResponseEntity<User> updateUser(@Valid @RequestBody User user) {
         int id = user.getId();
 
-        storage.updateUser(user, id);
+        service.updateUser(user, id);
         checkName(user);
         log.debug("Обновлена информация о пользователе: {}", user);
         return new ResponseEntity<>(user, HttpStatus.OK);

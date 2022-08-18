@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.controllers;
+package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -133,6 +133,14 @@ public class FilmControllerTest {
     }
 
     @Test
+    public void shouldThrowExceptionForAddingLikeFromNotFoundUser() {
+        addDefaultFilm();
+        HttpStatus statusCode = addLikeDefault().getStatusCode();
+
+        assertEquals(HttpStatus.NOT_FOUND, statusCode);
+    }
+
+    @Test
     public void removeLikeTest() {
         addDefaultFilm();
         addDefaultUser();
@@ -223,10 +231,12 @@ public class FilmControllerTest {
 
     private Film makeDefaultFilm() {
         return new Film(
+                0,
                 "nisi eiusmod",
                 "adipisicing",
                 LocalDate.parse("1967-03-25"),
-                100);
+                100,
+                0);
     }
 
     private Film makeDefaultFilm(int id) {
@@ -250,10 +260,12 @@ public class FilmControllerTest {
         }
 
         return new Film(
+                0,
                 name,
                 description,
                 date,
-                duration);
+                duration,
+                0);
     }
 
     private Film addDefaultFilm() {
@@ -266,8 +278,10 @@ public class FilmControllerTest {
 
     private User makeDefaultUser() {
         return new User(
+                0,
                 "mail@mail.ru",
                 "NickName",
+                "",
                 LocalDate.parse("1946-08-20")
         );
     }

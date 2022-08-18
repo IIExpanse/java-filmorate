@@ -2,9 +2,9 @@ package ru.yandex.practicum.filmorate.service.user.impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.friends.CantAddSelfException;
-import ru.yandex.practicum.filmorate.exceptions.friends.FriendAlreadyAddedException;
-import ru.yandex.practicum.filmorate.exceptions.friends.FriendNotFoundException;
+import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
+import ru.yandex.practicum.filmorate.exception.friend.FriendAlreadyAddedException;
+import ru.yandex.practicum.filmorate.exception.friend.FriendNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -25,12 +25,16 @@ public class InMemoryUserServiceTest {
     @BeforeEach
     public void refreshFields() {
         user1 = new User(
+                0,
                 "mail@mail.ru",
                 "NickName",
+                "",
                 LocalDate.parse("1946-08-20"));
         user2 = new User(
+                0,
                 "mail@yandex.ru",
                 "Tomcat",
+                "",
                 LocalDate.parse("1978-08-20"));
         storage = new InMemoryUserStorage();
         service = new InMemoryUserService(storage);
@@ -82,8 +86,10 @@ public class InMemoryUserServiceTest {
     @Test
     public void getCommonFriendsTest() {
         User user3 = new User(
+                0,
                 "mail@somemail.ru",
                 "Jackdog",
+                "",
                 LocalDate.parse("1933-08-20"));
         storage.addUser(user3);
 

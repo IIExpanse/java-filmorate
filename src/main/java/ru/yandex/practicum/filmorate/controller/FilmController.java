@@ -1,16 +1,18 @@
-package ru.yandex.practicum.filmorate.controllers;
+package ru.yandex.practicum.filmorate.controller;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.users.UserNotFoundException;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import javax.validation.Valid;
 import java.util.Collection;
@@ -19,27 +21,20 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/films")
 @Slf4j
+@AllArgsConstructor
 public class FilmController {
 
-    private final FilmStorage storage;
     private final FilmService service;
-    private final UserStorage userStorage;
-
-    @Autowired
-    public FilmController(FilmStorage storage, FilmService service, UserStorage userStorage) {
-        this.storage = storage;
-        this.service = service;
-        this.userStorage = userStorage;
-    }
+    private ServletWebServerApplicationContext context;
 
     @GetMapping("/{id}")
     public ResponseEntity<Film> getFilm(@PathVariable int id) {
-        return ResponseEntity.ok(storage.getFilm(id));
+        return ResponseEntity.ok(service.getFilm(id));
     }
 
     @GetMapping
     public ResponseEntity<Collection<Film>> getFilmsList() {
-        return ResponseEntity.ok(storage.getFilms());
+        return ResponseEntity.ok(service.getFilms());
     }
 
     @GetMapping("/popular")
@@ -49,7 +44,7 @@ public class FilmController {
 
     @PostMapping
     public ResponseEntity<Film> addNewFilm(@Valid @RequestBody Film film) {
-        storage.addFilm(film);
+        service.addFilm(film);
         log.debug("Добавлен новый фильм: {}", film);
         return new ResponseEntity<>(film, HttpStatus.CREATED);
     }
@@ -58,7 +53,7 @@ public class FilmController {
     public ResponseEntity<Film> updateFilm(@Valid @RequestBody Film film) {
         int id = film.getId();
 
-        storage.updateFilm(film, id);
+        service.updateFilm(film, id);
         log.debug("Обновлен фильм с id={}", id);
         return ResponseEntity.ok(film);
     }
@@ -90,6 +85,15 @@ public class FilmController {
     }
 
     private boolean isUserNotFound(int userId) {
-        return userStorage.getUser(userId) == null;
+        RestTemplate template = new RestTemplate();
+        int port = context.getWebServer().getPort();
+        try {
+            template.getForObject("http://localhost:" + port + "/users/" + userId, User.class);
+
+        } catch (HttpClientErrorException e) {
+            return true;
+        }
+
+        return false;
     }
 }

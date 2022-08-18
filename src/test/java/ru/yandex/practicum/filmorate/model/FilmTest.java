@@ -2,8 +2,8 @@ package ru.yandex.practicum.filmorate.model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.likes.LikeAlreadyAddedException;
-import ru.yandex.practicum.filmorate.exceptions.likes.LikeNotFoundException;
+import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
+import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 
 import java.time.LocalDate;
 
@@ -16,10 +16,12 @@ public class FilmTest {
     @BeforeEach
     public void refreshFilm() {
         film = new Film(
+                0,
                 "nisi eiusmod",
                 "adipisicing",
                 LocalDate.parse("1967-03-25"),
-                100);
+                100,
+                0);
     }
 
     @Test

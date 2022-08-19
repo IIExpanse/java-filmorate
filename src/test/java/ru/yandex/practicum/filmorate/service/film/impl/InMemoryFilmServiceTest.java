@@ -5,9 +5,12 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.impl.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.storage.user.impl.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,7 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class InMemoryFilmServiceTest {
 
-    FilmStorage storage;
+    FilmStorage filmStorage;
+    UserStorage userStorage;
     FilmService service;
     Film film;
 
@@ -29,9 +33,18 @@ public class InMemoryFilmServiceTest {
                 LocalDate.parse("1967-03-25"),
                 100,
                 0);
-        storage = new InMemoryFilmStorage();
-        service = new InMemoryFilmService(storage);
-        storage.addFilm(film);
+        User user = new User(
+                0,
+                "mail@mail.ru",
+                "NickName",
+                "",
+                LocalDate.parse("1946-08-20"));
+        filmStorage = new InMemoryFilmStorage();
+        userStorage = new InMemoryUserStorage();
+
+        service = new InMemoryFilmService(filmStorage, userStorage);
+        filmStorage.addFilm(film);
+        userStorage.addUser(user);
     }
 
     @Test
@@ -67,7 +80,7 @@ public class InMemoryFilmServiceTest {
                 LocalDate.parse("1989-03-25"),
                 100,
                 0);
-        storage.addFilm(film1);
+        filmStorage.addFilm(film1);
         film.addLike(1);
         assertTrue(service.getPopularFilms(10).contains(film));
 

@@ -14,6 +14,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -113,10 +114,133 @@ public class UserControllerTest {
     }
 
     @Test
+    public void addFriendTest() {
+        addDefaultUser();
+        addDefaultUser();
+
+        HttpStatus responseCode = addFriendDefault().getStatusCode();
+
+        assertEquals(HttpStatus.OK, responseCode);
+    }
+
+    @Test
+    public void shouldThrowExceptionForAddingSelfToFriends() {
+        addDefaultUser();
+        HttpStatus responseCode = restTemplate.exchange(
+                        getActualURI() + "/1/friends/1",
+                        HttpMethod.PUT,
+                        new HttpEntity<>(null),
+                        User.class)
+                .getStatusCode();
+
+        assertEquals(HttpStatus.CONFLICT, responseCode);
+    }
+
+    @Test
+    public void shouldThrowExceptionForAlreadyAddedFriend() {
+        addDefaultUser();
+        addDefaultUser();
+
+        addFriendDefault();
+        HttpStatus responseCode = addFriendDefault().getStatusCode();
+
+        assertEquals(HttpStatus.CONFLICT, responseCode);
+    }
+
+    @Test
+    public void removeFriendTest() {
+        addDefaultUser();
+        addDefaultUser();
+        addFriendDefault();
+
+        HttpStatus responseCode = restTemplate.exchange(
+                getActualURI() + "/1/friends/2",
+                HttpMethod.DELETE,
+                new HttpEntity<>(null),
+                User.class)
+                .getStatusCode();
+
+        assertEquals(HttpStatus.OK, responseCode);
+    }
+
+    @Test
+    public void shouldThrowExceptionForNotFoundFriend() {
+        addDefaultUser();
+        addDefaultUser();
+
+        HttpStatus responseCode = restTemplate.exchange(
+                        getActualURI() + "/1/friends/2",
+                        HttpMethod.DELETE,
+                        new HttpEntity<>(null),
+                        User.class)
+                .getStatusCode();
+
+        assertEquals(HttpStatus.NOT_FOUND, responseCode);
+    }
+
+    @Test
     public void getUsersTest() {
         User user = addDefaultUser();
-        ResponseEntity<List<User>> response = restTemplate.exchange(
+        ResponseEntity<Collection<User>> response = restTemplate.exchange(
                 getActualURI(),
+                HttpMethod.GET,
+                new HttpEntity<>(null),
+                new ParameterizedTypeReference<>() {
+                });
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(List.of(user), response.getBody());
+    }
+
+    @Test
+    public void getFriendsListTest() {
+        ResponseEntity<Collection<User>> response;
+
+        User user1 = addDefaultUser();
+        user1.setId(1);
+        User user2 = addDefaultUser();
+        user2.setId(2);
+        addFriendDefault();
+
+        response = restTemplate.exchange(
+                getActualURI() + "/1/friends",
+                HttpMethod.GET,
+                new HttpEntity<>(null),
+                new ParameterizedTypeReference<>() {
+                });
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(List.of(user2), response.getBody());
+
+        response = restTemplate.exchange(
+                getActualURI() + "/2/friends",
+                HttpMethod.GET,
+                new HttpEntity<>(null),
+                new ParameterizedTypeReference<>() {
+                });
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(List.of(user1), response.getBody());
+    }
+
+    @Test
+    public void getCommonFriendsTest() {
+        addDefaultUser();
+        addDefaultUser();
+        User user = addDefaultUser();
+        user.setId(3);
+
+        restTemplate.exchange(
+                getActualURI() + "/1/friends/3",
+                HttpMethod.PUT,
+                new HttpEntity<>(null),
+                User.class);
+
+        restTemplate.exchange(
+                getActualURI() + "/2/friends/3",
+                HttpMethod.PUT,
+                new HttpEntity<>(null),
+                User.class);
+
+        ResponseEntity<Collection<User>> response = restTemplate.exchange(
+                getActualURI() + "/1/friends/common/2",
                 HttpMethod.GET,
                 new HttpEntity<>(null),
                 new ParameterizedTypeReference<>() {
@@ -127,8 +251,10 @@ public class UserControllerTest {
 
     private User makeDefaultUser() {
         return new User(
+                0,
                 "mail@mail.ru",
                 "NickName",
+                "",
                 LocalDate.parse("1946-08-20")
         );
     }
@@ -151,8 +277,10 @@ public class UserControllerTest {
         }
 
         return new User(
+                0,
                 email,
                 login,
+                "",
                 birthday);
     }
 
@@ -162,5 +290,13 @@ public class UserControllerTest {
 
     private String getActualURI() {
         return "http://localhost:" + port + "/users";
+    }
+
+    private ResponseEntity<User> addFriendDefault() {
+        return restTemplate.exchange(
+                        getActualURI() + "/1/friends/2",
+                        HttpMethod.PUT,
+                        new HttpEntity<>(null),
+                        User.class);
     }
 }

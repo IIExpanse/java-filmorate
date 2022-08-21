@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
 import ru.yandex.practicum.filmorate.exception.friend.FriendAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.friend.FriendNotFoundException;
@@ -17,20 +16,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class User {
 
     private int id;
     @NotBlank
     @Email
-    private String email;
+    private final String email;
     @NotBlank
     @NoWhitespaceConstraint
-    private String login;
+    private final String login;
     private String name;
     @PastOrPresent
-    private LocalDate birthday;
+    private final LocalDate birthday;
     @JsonIgnore
     private final Set<Integer> friendsIds = new HashSet<>();
 

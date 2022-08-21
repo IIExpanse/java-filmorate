@@ -15,19 +15,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class Film {
 
     private int id;
     @NotBlank
-    private String name;
+    private final String name;
     @Size(max = 200)
-    private String description;
+    private final String description;
     @ReleaseDateConstraint(year = 1895, month = 12, day = 28)
-    private LocalDate releaseDate;
+    private final LocalDate releaseDate;
     @Positive
-    private int duration;
+    private final int duration;
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private int rate;
     @JsonIgnore

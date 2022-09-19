@@ -1,10 +1,11 @@
 package ru.yandex.practicum.filmorate.storage.film.impl;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.model.MPA;
 
 import java.time.LocalDate;
 
@@ -12,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class InMemoryFilmStorageTest {
 
-    FilmStorage storage;
+    InMemoryFilmStorage storage;
     Film film;
 
     @BeforeEach
@@ -23,7 +24,8 @@ public class InMemoryFilmStorageTest {
                 "adipisicing",
                 LocalDate.parse("1967-03-25"),
                 100,
-                0);
+                0,
+                new MPA(1, "G"));
         storage = new InMemoryFilmStorage();
     }
 
@@ -35,7 +37,7 @@ public class InMemoryFilmStorageTest {
     @Test
     public void addFilmTest() {
         storage.addFilm(film);
-        assertEquals(film, storage.getFilm(1));
+        Assertions.assertEquals(film, storage.getFilm(1));
     }
 
     @Test
@@ -53,7 +55,8 @@ public class InMemoryFilmStorageTest {
                 "adipisicing",
                 LocalDate.parse("1967-03-25"),
                 100,
-                0);
+                0,
+                new MPA(1, "G"));
         storage.updateFilm(film, 1);
         assertEquals("updatedFilm", storage.getFilm(1).getName());
     }

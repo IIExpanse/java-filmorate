@@ -1,8 +1,11 @@
 package ru.yandex.practicum.filmorate.service.film;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface FilmService {
 
@@ -12,7 +15,15 @@ public interface FilmService {
 
     Collection<Film> getPopularFilms(int count);
 
-    void addFilm(Film film);
+    Genre getGenre(int id);
+
+    List<Genre> getGenres();
+
+    MPA getMpa(int id);
+
+    List<MPA> getMPAs();
+
+    int addFilm(Film film);
 
     void addLike(int targetFilmId, int userId);
 

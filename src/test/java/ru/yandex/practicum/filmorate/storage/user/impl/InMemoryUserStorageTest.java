@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 
@@ -12,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class InMemoryUserStorageTest {
 
-    UserStorage storage;
+    InMemoryUserStorage storage;
     User user;
 
     @BeforeEach

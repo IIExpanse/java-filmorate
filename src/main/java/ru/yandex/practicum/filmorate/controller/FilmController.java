@@ -1,12 +1,13 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 
 import javax.validation.Valid;
@@ -16,10 +17,13 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/films")
 @Slf4j
-@AllArgsConstructor
 public class FilmController {
 
     private final FilmService service;
+
+    public FilmController(@Qualifier("FilmDBService") FilmService service) {
+        this.service = service;
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Film> getFilm(@PathVariable int id) {
@@ -36,9 +40,20 @@ public class FilmController {
         return ResponseEntity.ok(service.getPopularFilms(count));
     }
 
+    @GetMapping("/genres/{id}")
+    public ResponseEntity<Genre> getGenre(@PathVariable int id) {
+        return ResponseEntity.ok(service.getGenre(id));
+    }
+
+    @GetMapping("/genres")
+    public ResponseEntity<Collection<Genre>> getGenres() {
+        return ResponseEntity.ok(service.getGenres());
+    }
+
     @PostMapping
     public ResponseEntity<Film> addNewFilm(@Valid @RequestBody Film film) {
-        service.addFilm(film);
+        int id = service.addFilm(film);
+        film.setId(id);
         log.debug("Добавлен новый фильм: {}", film);
         return new ResponseEntity<>(film, HttpStatus.CREATED);
     }
@@ -49,7 +64,7 @@ public class FilmController {
 
         service.updateFilm(film, id);
         log.debug("Обновлен фильм с id={}", id);
-        return ResponseEntity.ok(film);
+        return ResponseEntity.ok(service.getFilm(film.getId()));
     }
 
     @PutMapping("/{id}/like/{userId}")

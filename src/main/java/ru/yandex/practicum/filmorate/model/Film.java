@@ -2,7 +2,8 @@ package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.validator.ReleaseDateConstraint;
@@ -11,7 +12,9 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -29,6 +32,8 @@ public class Film {
     private final int duration;
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private int rate;
+    private final MPA mpa;
+    private final List<Genre> genres = new ArrayList<>();
     @JsonIgnore
     private final Set<Integer> likes = new HashSet<>();
 
@@ -51,7 +56,12 @@ public class Film {
         updateRate();
     }
 
+    public void addGenre(Genre g) {
+        genres.add(g);
+    }
+
     private void updateRate() {
         this.rate = likes.size();
     }
+
 }

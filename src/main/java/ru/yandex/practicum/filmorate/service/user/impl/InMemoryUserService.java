@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.service.user.impl;
 
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
@@ -10,11 +10,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
-@AllArgsConstructor
+@Service("InMemoryUserService")
 public class InMemoryUserService implements UserService {
 
-    private final UserStorage storage;
+    protected final UserStorage storage;
+
+    public InMemoryUserService(@Qualifier("InMemoryUserStorage") UserStorage storage) {
+        this.storage = storage;
+    }
 
     @Override
     public User getUser(int id) {
@@ -49,17 +52,15 @@ public class InMemoryUserService implements UserService {
     }
 
     @Override
-    public void addUser(User user) {
-        storage.addUser(user);
+    public int addUser(User user) {
+        return storage.addUser(user);
     }
 
     @Override
     public void addFriend(int targetUserId, int friendId) {
         User user = storage.getUser(targetUserId);
-        User friend = storage.getUser(friendId);
 
         user.addFriend(friendId);
-        friend.addFriend(targetUserId);
     }
 
     @Override
@@ -70,9 +71,7 @@ public class InMemoryUserService implements UserService {
     @Override
     public void removeFriend(int targetUserId, int friendId) {
         User user = storage.getUser(targetUserId);
-        User friend = storage.getUser(friendId);
 
         user.removeFriend(friendId);
-        friend.removeFriend(targetUserId);
     }
 }

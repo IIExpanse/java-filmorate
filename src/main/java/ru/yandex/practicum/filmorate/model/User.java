@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
 import ru.yandex.practicum.filmorate.exception.friend.FriendAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.friend.FriendNotFoundException;
 import ru.yandex.practicum.filmorate.validator.NoWhitespaceConstraint;
@@ -33,10 +32,6 @@ public class User {
     private final Set<Integer> friendsIds = new HashSet<>();
 
     public void addFriend(int friendId) {
-        if (friendId == this.id) {
-            throw new CantAddSelfException(String.format("Ошибка при добавлении друга для пользователя с id=%d: " +
-                    "невозможно добавить в друзья самого себя.", id));
-        }
 
         if (!friendsIds.add(friendId)) {
             throw new FriendAlreadyAddedException(

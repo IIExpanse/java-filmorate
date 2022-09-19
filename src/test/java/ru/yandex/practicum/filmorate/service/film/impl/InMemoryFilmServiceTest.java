@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -32,7 +33,8 @@ public class InMemoryFilmServiceTest {
                 "adipisicing",
                 LocalDate.parse("1967-03-25"),
                 100,
-                0);
+                0,
+                new MPA(1, "G"));
         User user = new User(
                 0,
                 "mail@mail.ru",
@@ -79,7 +81,8 @@ public class InMemoryFilmServiceTest {
                 "test film",
                 LocalDate.parse("1989-03-25"),
                 100,
-                0);
+                0,
+                new MPA(1, "G"));
         filmStorage.addFilm(film1);
         film.addLike(1);
         assertTrue(service.getPopularFilms(10).contains(film));

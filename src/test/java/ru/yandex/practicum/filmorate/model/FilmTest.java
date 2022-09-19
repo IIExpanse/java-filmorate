@@ -21,7 +21,8 @@ public class FilmTest {
                 "adipisicing",
                 LocalDate.parse("1967-03-25"),
                 100,
-                0);
+                0,
+                new MPA(1, "G"));
     }
 
     @Test

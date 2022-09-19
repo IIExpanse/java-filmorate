@@ -1,9 +1,11 @@
 package ru.yandex.practicum.filmorate.service.film.impl;
 
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -13,13 +15,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
-@AllArgsConstructor
+@Service("InMemoryFilmService")
 public class InMemoryFilmService implements FilmService {
 
-    private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
+    protected final FilmStorage filmStorage;
+    protected final UserStorage userStorage;
 
+    public InMemoryFilmService(@Qualifier("InMemoryFilmStorage") FilmStorage filmStorage,
+                               @Qualifier("InMemoryUserStorage") UserStorage userStorage) {
+        this.filmStorage = filmStorage;
+        this.userStorage = userStorage;
+    }
 
     @Override
     public Film getFilm(int id) {
@@ -35,7 +41,6 @@ public class InMemoryFilmService implements FilmService {
     public Collection<Film> getPopularFilms(int count) {
         Collection<Film> popularFilmsList = List.copyOf(
                 filmStorage.getFilms().stream()
-                        .dropWhile(film -> film.getRate() == 0)
                         .sorted(Comparator.comparing(Film::getRate).reversed())
                         .limit(count)
                         .collect(Collectors.toList()));
@@ -49,6 +54,26 @@ public class InMemoryFilmService implements FilmService {
     }
 
     @Override
+    public Genre getGenre(int id) {
+        return filmStorage.getGenre(id);
+    }
+
+    @Override
+    public List<Genre> getGenres() {
+        return filmStorage.getGenres();
+    }
+
+    @Override
+    public MPA getMpa(int id) {
+        return filmStorage.getMPA(id);
+    }
+
+    @Override
+    public List<MPA> getMPAs() {
+        return filmStorage.getMPAs();
+    }
+
+    @Override
     public void addLike(int targetFilmId, int userId) {
         if (userStorage.getUser(userId) == null) {
             throw new UserNotFoundException(
@@ -56,13 +81,12 @@ public class InMemoryFilmService implements FilmService {
                             "пользователь не найден.", targetFilmId, userId)
             );
         }
-        Film film = filmStorage.getFilm(targetFilmId);
-        film.addLike(userId);
+        filmStorage.addLike(targetFilmId, userId);
     }
 
     @Override
-    public void addFilm(Film film) {
-        filmStorage.addFilm(film);
+    public int addFilm(Film film) {
+        return filmStorage.addFilm(film);
     }
 
     @Override
@@ -78,7 +102,6 @@ public class InMemoryFilmService implements FilmService {
                             "пользователь не найден.", targetFilmId, userId)
             );
         }
-        Film film = filmStorage.getFilm(targetFilmId);
-        film.removeLike(userId);
+        filmStorage.removeLike(targetFilmId, userId);
     }
 }

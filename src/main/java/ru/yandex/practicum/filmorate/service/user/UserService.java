@@ -14,7 +14,7 @@ public interface UserService {
 
     Collection<User> getCommonFriends(int targetUserId, int otherUserId);
 
-    void addUser(User user);
+    int addUser(User user);
 
     void addFriend(int targetUserId, int friendId);
 

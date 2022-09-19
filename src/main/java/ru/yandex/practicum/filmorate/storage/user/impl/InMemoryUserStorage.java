@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Repository
+@Repository("InMemoryUserStorage")
 public class InMemoryUserStorage implements UserStorage {
 
     private final Map<Integer, User> usersMap = new HashMap<>();
@@ -31,11 +31,18 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void addUser(User user) {
+    public int addUser(User user) {
         int id = generateNewId();
 
         user.setId(id);
         usersMap.put(id, user);
+        return user.getId();
+    }
+
+    @Override
+    public void addFriend(int targetUserId, int friendId) {
+        User user = getUser(targetUserId);
+        user.addFriend(friendId);
     }
 
     @Override
@@ -46,6 +53,12 @@ public class InMemoryUserStorage implements UserStorage {
 
         } else throw new UserNotFoundException(
                     String.format("Ошибка обновления: пользователь с id=%d не найден.", id));
+    }
+
+    @Override
+    public void removeFriend(int targetUserId, int friendId) {
+        User user = getUser(targetUserId);
+        user.removeFriend(friendId);
     }
 
     private int generateNewId() {

@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
 import ru.yandex.practicum.filmorate.exception.friend.FriendAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.friend.FriendNotFoundException;
 
@@ -28,12 +27,6 @@ public class UserTest {
     public void addFriendTest() {
         user.addFriend(1);
         assertTrue(user.getFriendsIds().contains(1));
-    }
-
-    @Test
-    public void shouldThrowExceptionForAddingSelfToFriends() {
-        user.setId(1);
-        assertThrows(CantAddSelfException.class, () -> user.addFriend(1));
     }
 
     @Test

@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -11,7 +12,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -22,7 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Sql(scripts = "classpath:SchemaTest.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:DataTest.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 public class FilmControllerTest {
 
     @LocalServerPort
@@ -32,10 +38,72 @@ public class FilmControllerTest {
     private TestRestTemplate restTemplate;
 
     @Test
+    public void getFilmsTest() {
+        Film film = addDefaultFilm();
+        ResponseEntity<List<Film>> response = restTemplate.exchange(
+                getActualURI(),
+                HttpMethod.GET,
+                new HttpEntity<>(null),
+                new ParameterizedTypeReference<>() {
+                });
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        film.setId(1);
+        assertEquals(List.of(film), response.getBody());
+    }
+
+    @Test
+    public void getPopularFilmsTest() {
+        Film film1 = addDefaultFilm();
+        film1.setId(1);
+        Film film2 = addDefaultFilm();
+        film2.setId(2);
+        addDefaultUser();
+
+        addLikeDefault();
+
+        restTemplate.exchange(
+                getActualURI() + "/2/like/1",
+                HttpMethod.PUT,
+                new HttpEntity<>(null),
+                Film.class);
+
+        ResponseEntity<Collection<Film>> response = restTemplate.exchange(getActualURI() + "/popular",
+                HttpMethod.GET,
+                new HttpEntity<>(null),
+                new ParameterizedTypeReference<>() {
+                });
+        Collection<Film> list = response.getBody();
+
+        assertNotNull(list);
+        assertEquals(2, list.size());
+        assertEquals(List.of(film1, film2), list);
+    }
+
+    @Test
+    public void shouldReturnDefaultFilmListIfNothingIsLiked() {
+        Film film1 = addDefaultFilm();
+        film1.setId(1);
+        Film film2 = addDefaultFilm();
+        film2.setId(2);
+        addDefaultUser();
+
+        ResponseEntity<Collection<Film>> response = restTemplate.exchange(getActualURI() + "/popular",
+                HttpMethod.GET,
+                new HttpEntity<>(null),
+                new ParameterizedTypeReference<>() {
+                });
+        Collection<Film> list = response.getBody();
+
+        assertNotNull(list);
+        assertEquals(2, list.size());
+        assertEquals(List.of(film1, film2), list);
+    }
+
+    @Test
     public void addNewFilmTest() {
         Film film = makeDefaultFilm();
-        ResponseEntity<Film> response = restTemplate.postForEntity(getActualURI(), film, Film.class);
         film.setId(1);
+        ResponseEntity<Film> response = restTemplate.postForEntity(getActualURI(), film, Film.class);
 
         assertEquals(film, response.getBody());
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -91,29 +159,6 @@ public class FilmControllerTest {
     }
 
     @Test
-    public void updateFilmTest() {
-        Film film = addDefaultFilm();
-        ResponseEntity<Film> response = restTemplate.exchange(
-                getActualURI(),
-                HttpMethod.PUT,
-                new HttpEntity<>(film),
-                Film.class);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(film, response.getBody());
-    }
-
-    @Test
-    public void shouldThrowExceptionForNotFoundFilmDuringUpdate() {
-        Film film = makeDefaultFilm(1);
-        ResponseEntity<Film> response = restTemplate.exchange(
-                getActualURI(),
-                HttpMethod.PUT,
-                new HttpEntity<>(film),
-                Film.class);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
     public void addLikeTest() {
         addDefaultFilm();
         addDefaultUser();
@@ -138,6 +183,30 @@ public class FilmControllerTest {
         HttpStatus statusCode = addLikeDefault().getStatusCode();
 
         assertEquals(HttpStatus.NOT_FOUND, statusCode);
+    }
+
+    @Test
+    public void updateFilmTest() {
+        Film film = addDefaultFilm();
+        film.setId(1);
+        ResponseEntity<Film> response = restTemplate.exchange(
+                getActualURI(),
+                HttpMethod.PUT,
+                new HttpEntity<>(film),
+                Film.class);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(film, response.getBody());
+    }
+
+    @Test
+    public void shouldThrowExceptionForNotFoundFilmDuringUpdate() {
+        Film film = makeDefaultFilm(1);
+        ResponseEntity<Film> response = restTemplate.exchange(
+                getActualURI(),
+                HttpMethod.PUT,
+                new HttpEntity<>(film),
+                Film.class);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
@@ -168,67 +237,6 @@ public class FilmControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, statusCode);
     }
 
-    @Test
-    public void getFilmsTest() {
-        Film film = addDefaultFilm();
-        ResponseEntity<List<Film>> response = restTemplate.exchange(
-                getActualURI(),
-                HttpMethod.GET,
-                new HttpEntity<>(null),
-                new ParameterizedTypeReference<>() {
-                });
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(List.of(film), response.getBody());
-    }
-
-    @Test
-    public void getPopularFilmsTest() {
-        Film film1 = addDefaultFilm();
-        film1.setId(1);
-        Film film2 = addDefaultFilm();
-        film2.setId(2);
-        addDefaultUser();
-
-        addLikeDefault();
-
-        restTemplate.exchange(
-                getActualURI() + "/2/like/1",
-                HttpMethod.PUT,
-                new HttpEntity<>(null),
-                Film.class);
-
-        ResponseEntity<Collection<Film>> response = restTemplate.exchange(getActualURI() + "/popular",
-                HttpMethod.GET,
-                new HttpEntity<>(null),
-                new ParameterizedTypeReference<>() {
-                });
-        Collection<Film> list = response.getBody();
-
-        assertNotNull(list);
-        assertEquals(2, list.size());
-        assertEquals(List.of(film1, film2), list);
-    }
-
-    @Test
-    public void shouldReturnDefaultFilmListIfNothingIsLiked() {
-        Film film1 = addDefaultFilm();
-        film1.setId(1);
-        Film film2 = addDefaultFilm();
-        film2.setId(2);
-        addDefaultUser();
-
-        ResponseEntity<Collection<Film>> response = restTemplate.exchange(getActualURI() + "/popular",
-                HttpMethod.GET,
-                new HttpEntity<>(null),
-                new ParameterizedTypeReference<>() {
-                });
-        Collection<Film> list = response.getBody();
-
-        assertNotNull(list);
-        assertEquals(2, list.size());
-        assertEquals(List.of(film1, film2), list);
-    }
-
     private Film makeDefaultFilm() {
         return new Film(
                 0,
@@ -236,7 +244,8 @@ public class FilmControllerTest {
                 "adipisicing",
                 LocalDate.parse("1967-03-25"),
                 100,
-                0);
+                0,
+                new MPA(1, "G"));
     }
 
     private Film makeDefaultFilm(int id) {
@@ -265,7 +274,8 @@ public class FilmControllerTest {
                 description,
                 date,
                 duration,
-                0);
+                0,
+                new MPA(1, "G"));
     }
 
     private Film addDefaultFilm() {

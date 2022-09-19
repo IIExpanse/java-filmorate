@@ -1,4 +1,9 @@
-DROP ALL OBJECTS;
+DROP TABLE IF EXISTS "likes";
+DROP TABLE IF EXISTS "friendships_sent";
+DROP TABLE IF EXISTS "users";
+DROP TABLE IF EXISTS "film_genres";
+DROP TABLE IF EXISTS "films";
+DROP TABLE IF EXISTS "genres";
 
 CREATE TYPE IF NOT EXISTS "mpa_name" AS ENUM (
     'G',

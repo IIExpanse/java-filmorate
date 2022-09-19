@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureTestDatabase
 @Sql(scripts = "classpath:SchemaTest.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(scripts = "classpath:DataTest.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @AllArgsConstructor(onConstructor_ = @Autowired)
 public class UserDBServiceTest {
 

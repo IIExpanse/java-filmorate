@@ -1,3 +1,5 @@
+DROP ALL OBJECTS;
+
 CREATE TYPE IF NOT EXISTS "mpa_name" AS ENUM (
     'G',
     'PG',

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.film.impl;
+package ru.yandex.practicum.filmorate.dao.film;
 
 import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
@@ -8,13 +8,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
+import ru.yandex.practicum.filmorate.dao.user.UserDAO;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.impl.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,24 +25,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @AllArgsConstructor(onConstructor_ = @Autowired)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Sql(scripts = "classpath:SchemaTest.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-public class FilmDbStorageTest {
+@Sql(scripts = "classpath:DataTest.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+public class FilmDAOTest {
 
-    FilmDbStorage filmStorage;
-    UserDbStorage userStorage;
-    private final List<MPA> MPAs = List.of(
-            new MPA(1, "G"),
-            new MPA(2, "PG"),
-            new MPA(3, "PG-13"),
-            new MPA(4, "R"),
-            new MPA(5,"NC-17"));
-    private final List<Genre> genres = List.of(
-            new Genre(1, "Комедия"),
-            new Genre(2, "Драма"),
-            new Genre(3, "Мультфильм"),
-            new Genre(4, "Триллер"),
-            new Genre(5, "Документальный"),
-            new Genre(6, "Боевик")
-    );
+    FilmDAO filmStorage;
+    UserDAO userStorage;
 
     @Test
     public void addAndGetFilmTest() {
@@ -68,26 +54,6 @@ public class FilmDbStorageTest {
         filmStorage.addFilm(film1);
         filmStorage.addFilm(film2);
         assertEquals(List.of(film1, film2), filmStorage.getFilms());
-    }
-
-    @Test
-    public void getGenreTest() {
-        assertEquals(genres.get(0), filmStorage.getGenre(1));
-    }
-
-    @Test
-    public void getGenresTest() {
-        assertEquals(genres, filmStorage.getGenres());
-    }
-
-    @Test
-    public void getMPATest() {
-        assertEquals(MPAs.get(0), filmStorage.getMPA(1));
-    }
-
-    @Test
-    public void getMPAsTest() {
-        assertEquals(MPAs, filmStorage.getMPAs());
     }
 
     @Test

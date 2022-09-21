@@ -1,10 +1,12 @@
-package ru.yandex.practicum.filmorate.storage.user.impl;
+package ru.yandex.practicum.filmorate.dao.user;
 
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -16,33 +18,26 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
-@Repository("UserDBStorage")
+@Repository("UserDAO")
 @Primary
 @AllArgsConstructor
-public class UserDbStorage implements UserStorage {
+public class UserDAO implements UserStorage {
 
     private final JdbcTemplate template;
 
     @Override
     public User getUser(int id) {
-        SqlRowSet rowSet = template.queryForRowSet("SELECT * FROM \"users\" WHERE \"user_id\" = ?", id);
-        if (!rowSet.next()) {
+        User user;
+        try {
+            user = template.queryForObject("SELECT * FROM \"users\" WHERE \"user_id\" = " + id, new UserMapper());
+        } catch (DataAccessException e) {
             throw new UserNotFoundException(
                     String.format("Ошибка получения: пользователь с id=%d не найден.", id));
         }
-        User user = new User(
-                rowSet.getInt("user_id"),
-                rowSet.getString("email"),
-                rowSet.getString("login"),
-                rowSet.getString("name"),
-                rowSet.getDate("birthday").toLocalDate()
-        );
 
-        rowSet = template.queryForRowSet(
+        SqlRowSet rowSet = template.queryForRowSet(
                 "SELECT \"to_user_id\" FROM \"friendships_sent\" WHERE \"from_user_id\" = ?", id);
         while (rowSet.next()) {
             user.addFriend(rowSet.getInt("to_user_id"));
@@ -53,20 +48,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Collection<User> getUsers() {
-        List<User> users = new ArrayList<>();
-        SqlRowSet rowSet = template.queryForRowSet("SELECT * FROM \"users\"");
-
-        while (rowSet.next()) {
-            users.add(
-                    new User(
-                            rowSet.getInt("user_id"),
-                            rowSet.getString("email"),
-                            rowSet.getString("login"),
-                            rowSet.getString("name"),
-                            rowSet.getDate("birthday").toLocalDate()));
-        }
-
-        return users;
+        return template.query("SELECT * FROM \"users\"", new UserMapper());
     }
 
     @Override
@@ -75,15 +57,15 @@ public class UserDbStorage implements UserStorage {
         Number id;
 
         template.update(con -> {
-                    PreparedStatement ps = con.prepareStatement(
-                            "INSERT INTO \"users\" (\"email\", \"login\", \"name\", \"birthday\")" +
+            PreparedStatement ps = con.prepareStatement(
+                    "INSERT INTO \"users\" (\"email\", \"login\", \"user_name\", \"birthday\")" +
                             "VALUES (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
-                    ps.setString(1, user.getEmail());
-                    ps.setString(2, user.getLogin());
-                    ps.setString(3, user.getName());
-                    ps.setDate(4, Date.valueOf(user.getBirthday()));
-                    return ps;
-                }, keyHolder);
+            ps.setString(1, user.getEmail());
+            ps.setString(2, user.getLogin());
+            ps.setString(3, user.getName());
+            ps.setDate(4, Date.valueOf(user.getBirthday()));
+            return ps;
+        }, keyHolder);
 
         id = keyHolder.getKey();
         if (id != null) {
@@ -123,7 +105,7 @@ public class UserDbStorage implements UserStorage {
                     String.format("Ошибка обновления: пользователь с id=%d не найден.", id));
         }
 
-        template.update("UPDATE \"users\" SET \"email\" = ?, \"login\" = ?, \"name\" = ?, \"birthday\" = ?" +
+        template.update("UPDATE \"users\" SET \"email\" = ?, \"login\" = ?, \"user_name\" = ?, \"birthday\" = ?" +
                         "WHERE \"user_id\" = ?",
                 user.getEmail(),
                 user.getLogin(),
@@ -165,5 +147,18 @@ public class UserDbStorage implements UserStorage {
         }
 
         return result;
+    }
+
+    static class UserMapper implements RowMapper<User> {
+        @Override
+        public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return new User(
+                    rs.getInt("user_id"),
+                    rs.getString("email"),
+                    rs.getString("login"),
+                    rs.getString("user_name"),
+                    rs.getDate("birthday").toLocalDate()
+            );
+        }
     }
 }

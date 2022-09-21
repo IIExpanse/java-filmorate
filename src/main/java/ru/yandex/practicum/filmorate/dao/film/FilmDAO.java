@@ -1,130 +1,79 @@
-package ru.yandex.practicum.filmorate.storage.film.impl;
+package ru.yandex.practicum.filmorate.dao.film;
 
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dao.genre.GenreDAO;
+import ru.yandex.practicum.filmorate.dao.mpa.MpaDAO;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.genre.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
-import ru.yandex.practicum.filmorate.exception.mpa.MPANotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.util.ArrayList;
+import java.sql.*;
 import java.util.Collection;
 import java.util.List;
 
-@Repository("FilmDbStorage")
+@Repository("FilmDAO")
 @Primary
 @AllArgsConstructor
-public class FilmDbStorage implements FilmStorage {
+public class FilmDAO implements FilmStorage {
 
     private final JdbcTemplate template;
+    private final GenreDAO genreDAO;
+    private final MpaDAO mpaDAO;
 
     @Override
     public Film getFilm(int id) {
-        SqlRowSet rowSet = template.queryForRowSet("SELECT * FROM \"films\" WHERE \"film_id\" = ?", id);
-        if (!rowSet.next()) {
+        Film film;
+        try {
+            film = template.queryForObject("SELECT * FROM \"films\"" +
+                            "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\" WHERE \"film_id\" = " + id,
+                    new FilmMapper());
+        } catch (DataAccessException e) {
             throw new FilmNotFoundException(String.format("Ошибка получения: фильм с id=%d не найден.", id));
         }
-
-        int mpaId = rowSet.getInt("mpa_id");
-        Film film = new Film(id,
-                rowSet.getString("name"),
-                rowSet.getString("description"),
-                rowSet.getDate("release_date").toLocalDate(),
-                rowSet.getInt("duration"),
-                rowSet.getInt("rate"),
-                new MPA(mpaId,
-                        template.queryForObject(
-                                "SELECT \"name\" FROM \"mpa_rating\" WHERE \"mpa_id\" = " + mpaId, String.class)));
-
-        addLikesToDTO(film, id);
-        addGenresToDTO(film, id);
 
         return film;
     }
 
     @Override
     public Collection<Film> getFilms() {
-        SqlRowSet rowSet = template.queryForRowSet("SELECT * FROM \"films\"");
-        List<Film> list = new ArrayList<>();
-
-        while (rowSet.next()) {
-            int mpaId = rowSet.getInt("mpa_id");
-
-            Film film = new Film(
-                    rowSet.getInt("film_id"),
-                    rowSet.getString("name"),
-                    rowSet.getString("description"),
-                    rowSet.getDate("release_date").toLocalDate(),
-                    rowSet.getInt("duration"),
-                    rowSet.getInt("rate"),
-                    new MPA(mpaId,
-                            template.queryForObject(
-                                    "SELECT \"name\" FROM \"mpa_rating\" WHERE \"mpa_id\" = " + mpaId, String.class))
-            );
-            addLikesToDTO(film, film.getId());
-            addGenresToDTO(film, film.getId());
-            list.add(film);
-        }
-
-        return list;
+        return template.query("SELECT * FROM \"films\" " +
+                "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\"", new FilmMapper());
     }
 
     @Override
     public Genre getGenre(int id) {
-        SqlRowSet genreRow = template.queryForRowSet("SELECT * FROM \"genres\" WHERE \"genre_id\" = ?", id);
-        if (!genreRow.next()) {
-            throw new GenreNotFoundException("Ошибка получения жанра: не найден жанр с id=" + id);
-        }
-
-        return new Genre(genreRow.getInt("genre_id"), genreRow.getString("name"));
+        return genreDAO.getGenre(id);
     }
 
     @Override
     public List<Genre> getGenres() {
-        SqlRowSet genreRows = template.queryForRowSet("SELECT * FROM \"genres\"");
-        List<Genre> list = new ArrayList<>();
-
-        while (genreRows.next()) {
-            list.add(new Genre(genreRows.getInt("genre_id"), genreRows.getString("name")));
-        }
-        return list;
+        return genreDAO.getGenres();
     }
 
     @Override
     public MPA getMPA(int id) {
-        SqlRowSet mpaRow = template.queryForRowSet("SELECT * FROM \"mpa_rating\" WHERE \"mpa_id\" = ?", id);
-        if (!mpaRow.next()) {
-            throw new MPANotFoundException("Ошибка получения рейтинга: не найден возрастной рейтинг с id=" + id);
-        }
-
-        return new MPA(mpaRow.getInt("mpa_id"), mpaRow.getString("name"));
+        return mpaDAO.getMPA(id);
     }
 
+    @Override
     public List<MPA> getMPAs() {
-        SqlRowSet mpaRows = template.queryForRowSet("SELECT * FROM \"mpa_rating\"");
-        List<MPA> list = new ArrayList<>();
-
-        while (mpaRows.next()) {
-            list.add(new MPA(mpaRows.getInt("mpa_id"), mpaRows.getString("name")));
-        }
-        return list;
+        return mpaDAO.getMPAs();
     }
 
     @Override
@@ -134,7 +83,8 @@ public class FilmDbStorage implements FilmStorage {
 
         template.update(con -> {
             PreparedStatement ps = con.prepareStatement(
-                    "INSERT INTO \"films\" (\"name\", " +
+                    "INSERT INTO \"films\" (" +
+                            "\"film_name\", " +
                             "\"description\", " +
                             "\"release_date\", " +
                             "\"duration\", " +
@@ -154,7 +104,7 @@ public class FilmDbStorage implements FilmStorage {
             throw new RuntimeException("Ошибка: фильм не был добавлен.");
         }
 
-        insertGenres(film, id.intValue());
+        genreDAO.insertGenres(film, id.intValue());
         return id.intValue();
     }
 
@@ -176,8 +126,8 @@ public class FilmDbStorage implements FilmStorage {
 
         } catch (DataIntegrityViolationException e) {
             throw new UserNotFoundException(
-            String.format("Ошибка при добавлении лайка для фильма с id=%d " +
-                    "от пользователя с id=%d: пользователь не найден.", userId, targetFilmId));
+                    String.format("Ошибка при добавлении лайка для фильма с id=%d " +
+                            "от пользователя с id=%d: пользователь не найден.", userId, targetFilmId));
         }
     }
 
@@ -189,7 +139,8 @@ public class FilmDbStorage implements FilmStorage {
             throw new FilmNotFoundException(String.format("Ошибка обновления: фильм с id=%d не найден.", id));
         }
 
-        template.update("UPDATE \"films\" SET \"name\" = ?," +
+        template.update("UPDATE \"films\" SET " +
+                        "\"film_name\" = ?," +
                         "\"description\" = ?," +
                         "\"release_date\" = ?," +
                         "\"duration\" = ?," +
@@ -205,7 +156,7 @@ public class FilmDbStorage implements FilmStorage {
                 id);
 
         template.update("DELETE FROM \"film_genres\" WHERE \"film_id\" = ?", id);
-        insertGenres(film, id);
+        genreDAO.insertGenres(film, id);
     }
 
     @Override
@@ -244,30 +195,35 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void addLikesToDTO(Film film, int id) {
-        SqlRowSet rowSet = template.queryForRowSet("SELECT \"from_user_id\" FROM \"likes\" WHERE \"film_id\" = ?", id);
+        SqlRowSet rowSet = template.queryForRowSet(
+                "SELECT \"from_user_id\" FROM \"likes\" WHERE \"film_id\" = ?", id);
 
         while (rowSet.next()) {
             film.addLike(rowSet.getInt("from_user_id"));
         }
     }
 
-    private void addGenresToDTO(Film film, int id) {
-        SqlRowSet rowSet = template.queryForRowSet("SELECT * FROM \"film_genres\" WHERE \"film_id\" = ? " +
-                "ORDER BY \"genre_id\"", id);
-        while (rowSet.next()) {
-            film.addGenre(getGenre(rowSet.getInt("genre_id")));
-        }
-    }
+    class FilmMapper implements RowMapper<Film> {
+        @Override
+        public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
+            int filmId = rs.getInt("film_id");
+            int mpaId = rs.getInt("mpa_id");
 
-    private void insertGenres(Film film, int id) {
-        try {
-            for (Genre genre : film.getGenres()) {
-                template.update("MERGE INTO \"film_genres\" (\"film_id\", \"genre_id\")" +
-                        "VALUES (?, ?)", id, genre.getId());
+            Film film = new Film(filmId,
+                    rs.getString("film_name"),
+                    rs.getString("description"),
+                    rs.getDate("release_date").toLocalDate(),
+                    rs.getInt("duration"),
+                    rs.getInt("rate"),
+                    new MPA(mpaId, rs.getString("mpa_name")));
+
+            List<Genre> genres = genreDAO.getFilmGenres(filmId);
+            for (Genre genre : genres) {
+                film.addGenre(genre);
             }
-        } catch (DataIntegrityViolationException e) {
-            throw new GenreNotFoundException("Ошибка при добавлении фильма: " +
-                    "один или несколько идентификаторов жанров не найдены.");
+            addLikesToDTO(film, filmId);
+
+            return film;
         }
     }
 }

@@ -9,7 +9,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 @Primary
 public class UserDBService extends InMemoryUserService {
 
-    public UserDBService(@Qualifier("UserDBStorage") UserStorage storage) {
+    public UserDBService(@Qualifier("UserDAO") UserStorage storage) {
         super(storage);
     }
 

@@ -1,36 +1,28 @@
-package ru.yandex.practicum.filmorate.controller;
+package ru.yandex.practicum.filmorate.dao.genre;
 
+import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
+import ru.yandex.practicum.filmorate.dao.film.FilmDAO;
 import ru.yandex.practicum.filmorate.model.Genre;
 
-import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 @AutoConfigureTestDatabase
+@AllArgsConstructor(onConstructor_ = @Autowired)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Sql(scripts = "classpath:SchemaTest.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:DataTest.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-public class GenreControllerTest {
+public class GenreDAOTest {
 
-    @LocalServerPort
-    private int port;
-
-    @Autowired
-    private TestRestTemplate restTemplate;
+    FilmDAO filmStorage;
 
     private final List<Genre> genres = List.of(
             new Genre(1, "Комедия"),
@@ -43,26 +35,11 @@ public class GenreControllerTest {
 
     @Test
     public void getGenreTest() {
-        ResponseEntity<Genre> response = restTemplate.getForEntity(getActualURI() + "/1",
-                Genre.class);
-
-        assertEquals(genres.get(0), response.getBody());
+        assertEquals(genres.get(0), filmStorage.getGenre(1));
     }
 
     @Test
     public void getGenresTest() {
-        ResponseEntity<Collection<Genre>> response = restTemplate.exchange(getActualURI(),
-                HttpMethod.GET,
-                new HttpEntity<>(null),
-                new ParameterizedTypeReference<>() {
-                });
-        Collection<Genre> list = response.getBody();
-
-        assertEquals(genres, list);
+        assertEquals(genres, filmStorage.getGenres());
     }
-
-    private String getActualURI() {
-        return "http://localhost:" + port + "/genres";
-    }
-
 }

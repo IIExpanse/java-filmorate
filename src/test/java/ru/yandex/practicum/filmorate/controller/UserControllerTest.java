@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -21,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@AutoConfigureTestDatabase
+@Sql(scripts = "classpath:schematest.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:datatest.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 public class UserControllerTest {
 
     @LocalServerPort
@@ -33,8 +38,8 @@ public class UserControllerTest {
     public void addNewUserTest() {
         User user = makeDefaultUser();
         ResponseEntity<User> response = restTemplate.postForEntity(getActualURI(), user, User.class);
-        user.setId(1);
         user.setName(user.getLogin());
+        user.setId(1);
 
         assertEquals(user, response.getBody());
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -93,6 +98,7 @@ public class UserControllerTest {
     @Test
     public void updateUserTest() {
         User user = addDefaultUser();
+        user.setId(1);
         ResponseEntity<User> response = restTemplate.exchange(
                 getActualURI(),
                 HttpMethod.PUT,
@@ -181,6 +187,7 @@ public class UserControllerTest {
     @Test
     public void getUsersTest() {
         User user = addDefaultUser();
+        user.setId(1);
         ResponseEntity<Collection<User>> response = restTemplate.exchange(
                 getActualURI(),
                 HttpMethod.GET,
@@ -210,6 +217,11 @@ public class UserControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(List.of(user2), response.getBody());
 
+        restTemplate.exchange(
+                getActualURI() + "/2/friends/1",
+                HttpMethod.PUT,
+                new HttpEntity<>(null),
+                User.class);
         response = restTemplate.exchange(
                 getActualURI() + "/2/friends",
                 HttpMethod.GET,

@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
+import ru.yandex.practicum.filmorate.exception.friend.CantRemoveSelfException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
 
@@ -16,10 +18,13 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/users")
 @Slf4j
-@AllArgsConstructor
 public class UserController {
 
     private final UserService service;
+
+    public UserController(@Qualifier("UserDBService") UserService service) {
+        this.service = service;
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable int id) {
@@ -43,8 +48,9 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> addNewUser(@Valid @RequestBody User user) {
-        service.addUser(user);
         checkName(user);
+        int id = service.addUser(user);
+        user.setId(id);
         log.debug("Добавлен новый пользователь: {}", user);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
@@ -53,8 +59,8 @@ public class UserController {
     public ResponseEntity<User> updateUser(@Valid @RequestBody User user) {
         int id = user.getId();
 
-        service.updateUser(user, id);
         checkName(user);
+        service.updateUser(user, id);
         log.debug("Обновлена информация о пользователе: {}", user);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
@@ -62,12 +68,20 @@ public class UserController {
     @PutMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
     public void addFriend(@PathVariable int id, @PathVariable int friendId) {
+        if (id == friendId) {
+            throw new CantAddSelfException(String.format("Ошибка при добавлении друга для пользователя с id=%d: " +
+                    "невозможно добавить в друзья самого себя.", id));
+        }
         service.addFriend(id, friendId);
-        log.debug("Пользователи с id={} и id={} добавлены в списки друзей друг друга.", friendId, id);
+        log.debug("Пользователь с id={} добавлен в список друзей пользователя с id={}.", friendId, id);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public void removeFriend(@PathVariable int id, @PathVariable int friendId) {
+        if (id == friendId) {
+            throw new CantRemoveSelfException(String.format("Ошибка при удалении друга у пользователя с id=%d: " +
+                    "невозможно удалить из друзей самого себя.", id));
+        }
         service.removeFriend(id, friendId);
         log.debug("Пользователи с id={} и id={} удалены из списков друзей друг друга.", friendId, id);
     }

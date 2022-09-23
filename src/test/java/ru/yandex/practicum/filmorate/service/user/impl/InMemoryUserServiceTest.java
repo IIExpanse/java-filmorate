@@ -2,12 +2,9 @@ package ru.yandex.practicum.filmorate.service.user.impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
 import ru.yandex.practicum.filmorate.exception.friend.FriendAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.friend.FriendNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.user.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.storage.user.impl.InMemoryUserStorage;
 
 import java.time.LocalDate;
@@ -17,8 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class InMemoryUserServiceTest {
 
-    UserStorage storage;
-    UserService service;
+    InMemoryUserStorage storage;
+    InMemoryUserService service;
     User user1;
     User user2;
 
@@ -46,19 +43,12 @@ public class InMemoryUserServiceTest {
     public void addFriendTest() {
         service.addFriend(user1.getId(), user2.getId());
         assertTrue(user1.getFriendsIds().contains(user2.getId()));
-        assertTrue(user2.getFriendsIds().contains(user1.getId()));
     }
 
     @Test
     public void shouldThrowExceptionForAlreadyAddedFriend() {
         service.addFriend(user1.getId(), user2.getId());
         assertThrows(FriendAlreadyAddedException.class, () -> service.addFriend(user1.getId(), user2.getId()));
-    }
-
-    @Test
-    public void shouldThrowExceptionForAddingSelfToFriends() {
-        int id = user1.getId();
-        assertThrows(CantAddSelfException.class, () -> service.addFriend(id, id));
     }
 
     @Test

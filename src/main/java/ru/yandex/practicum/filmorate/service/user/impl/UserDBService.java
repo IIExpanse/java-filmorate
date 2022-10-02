@@ -22,4 +22,9 @@ public class UserDBService extends InMemoryUserService {
     public void removeFriend(int targetUserId, int friendId) {
         storage.removeFriend(targetUserId, friendId);
     }
+
+    @Override
+    public void removeUser(int id) {
+        storage.removeUser(id);
+    }
 }

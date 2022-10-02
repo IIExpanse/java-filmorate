@@ -182,6 +182,17 @@ public class FilmDAO implements FilmStorage {
                 targetFilmId, userId);
     }
 
+    @Override
+    public void removeFilm(int id) {
+        Integer responseId = getIdFromDB(id);
+
+        if (responseId == null) {
+            throw new FilmNotFoundException(String.format("Ошибка удаления: фильм с id=%d не найден.", id));
+        }
+
+        template.update("DELETE FROM \"films\" WHERE \"film_id\" = ? ", id);
+    }
+
     private Integer getIdFromDB(int id) {
         Integer result;
         try {

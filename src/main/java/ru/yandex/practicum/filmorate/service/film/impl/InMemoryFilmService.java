@@ -104,4 +104,9 @@ public class InMemoryFilmService implements FilmService {
         }
         filmStorage.removeLike(targetFilmId, userId);
     }
+
+    @Override
+    public void removeFilm(int id) {
+        filmStorage.removeFilm(id);
+    }
 }

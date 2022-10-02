@@ -96,6 +96,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         filmsMap.get(targetFilmId).removeLike(userId);
     }
 
+    @Override
+    public void removeFilm(int id) {
+        filmsMap.remove(id);
+    }
+
     private int generateNewId() {
         return idCounter++;
     }

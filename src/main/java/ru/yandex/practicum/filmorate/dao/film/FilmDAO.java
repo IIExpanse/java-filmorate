@@ -12,12 +12,14 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dao.director.DirectorDAO;
 import ru.yandex.practicum.filmorate.dao.genre.GenreDAO;
 import ru.yandex.practicum.filmorate.dao.mpa.MpaDAO;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
@@ -35,13 +37,16 @@ public class FilmDAO implements FilmStorage {
     private final JdbcTemplate template;
     private final GenreDAO genreDAO;
     private final MpaDAO mpaDAO;
+    private final DirectorDAO directorDAO;
 
     @Override
     public Film getFilm(int id) {
         Film film;
         try {
             film = template.queryForObject("SELECT * FROM \"films\"" +
-                            "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\" WHERE \"film_id\" = " + id,
+                            "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\" " +
+                            "JOIN \"directors\" d on d.\"director_id\" = \"films\".\"director_id\" " +
+                            "WHERE \"film_id\" = " + id,
                     new FilmMapper());
         } catch (DataAccessException e) {
             throw new FilmNotFoundException(String.format("Ошибка получения: фильм с id=%d не найден.", id));
@@ -53,7 +58,16 @@ public class FilmDAO implements FilmStorage {
     @Override
     public Collection<Film> getFilms() {
         return template.query("SELECT * FROM \"films\" " +
-                "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\"", new FilmMapper());
+                "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\"" +
+                "JOIN \"directors\" d on \"films\".\"director_id\" = d.\"director_id\"", new FilmMapper());
+    }
+
+    @Override
+    public Collection<Film> getDirectorFilms(int id) {
+        return template.query("SELECT * FROM \"films\"" +
+                "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\"" +
+                "JOIN \"directors\" d on \"films\".\"director_id\" = d.\"director_id\"" +
+                "WHERE \"films\".\"director_id\" = " + id, new FilmMapper());
     }
 
     @Override
@@ -77,6 +91,16 @@ public class FilmDAO implements FilmStorage {
     }
 
     @Override
+    public Director getDirector(int id) {
+        return directorDAO.getDirector(id);
+    }
+
+    @Override
+    public Collection<Director> getDirectors() {
+        return directorDAO.getDirectors();
+    }
+
+    @Override
     public int addFilm(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         Number id;
@@ -89,13 +113,16 @@ public class FilmDAO implements FilmStorage {
                             "\"release_date\", " +
                             "\"duration\", " +
                             "\"rate\"," +
-                            "\"mpa_id\") VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+                            "\"mpa_id\"," +
+                            "\"director_id\") " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, film.getName());
             ps.setString(2, film.getDescription());
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
             ps.setInt(4, film.getDuration());
             ps.setInt(5, film.getRate());
             ps.setInt(6, film.getMpa().getId());
+            ps.setInt(7, film.getDirector().getId());
             return ps;
         }, keyHolder);
 
@@ -131,6 +158,10 @@ public class FilmDAO implements FilmStorage {
         }
     }
 
+    public int addDirector(Director director) {
+        return directorDAO.addDirector(director);
+    }
+
     @Override
     public void updateFilm(Film film, int id) {
         Integer responseId = getIdFromDB(id);
@@ -145,7 +176,8 @@ public class FilmDAO implements FilmStorage {
                         "\"release_date\" = ?," +
                         "\"duration\" = ?," +
                         "\"rate\" = ?," +
-                        "\"mpa_id\" = ?" +
+                        "\"mpa_id\" = ?," +
+                        "\"director_id\" = ?" +
                         "WHERE \"film_id\" = ?",
                 film.getName(),
                 film.getDescription(),
@@ -153,10 +185,21 @@ public class FilmDAO implements FilmStorage {
                 film.getDuration(),
                 film.getRate(),
                 film.getMpa().getId(),
+                film.getDirector().getId(),
                 id);
 
         template.update("DELETE FROM \"film_genres\" WHERE \"film_id\" = ?", id);
         genreDAO.insertGenres(film, id);
+    }
+
+    @Override
+    public void removeDirector(int id) {
+        directorDAO.removeDirector(id);
+    }
+
+    @Override
+    public void updateDirector(Director director) {
+        directorDAO.updateDirector(director);
     }
 
     @Override
@@ -207,7 +250,6 @@ public class FilmDAO implements FilmStorage {
         @Override
         public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
             int filmId = rs.getInt("film_id");
-            int mpaId = rs.getInt("mpa_id");
 
             Film film = new Film(filmId,
                     rs.getString("film_name"),
@@ -215,7 +257,8 @@ public class FilmDAO implements FilmStorage {
                     rs.getDate("release_date").toLocalDate(),
                     rs.getInt("duration"),
                     rs.getInt("rate"),
-                    new MPA(mpaId, rs.getString("mpa_name")));
+                    new MPA(rs.getInt("mpa_id"), rs.getString("mpa_name")),
+                    new Director(rs.getInt("director_id"), rs.getString("director_name")));
 
             List<Genre> genres = genreDAO.getFilmGenres(filmId);
             for (Genre genre : genres) {

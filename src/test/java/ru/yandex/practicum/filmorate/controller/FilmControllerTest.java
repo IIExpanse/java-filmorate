@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
@@ -36,6 +38,14 @@ public class FilmControllerTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @BeforeEach
+    public void addDirector() {
+        restTemplate.postForEntity("/directors", new Director(
+                1,
+                "Famous Director"
+        ), Integer.class);
+    }
 
     @Test
     public void getFilmsTest() {
@@ -77,6 +87,75 @@ public class FilmControllerTest {
         assertNotNull(list);
         assertEquals(2, list.size());
         assertEquals(List.of(film1, film2), list);
+    }
+
+    @Test
+    public void getSortedDirectorFilms() {
+        Film film1 = addDefaultFilm();
+        film1.setId(1);
+
+        Film film2 = new Film(
+                0,
+                "second film",
+                "second",
+                LocalDate.parse("1944-03-25"),
+                100,
+                0,
+                new MPA(1, "G"),
+                new Director(1, "Famous Director"));
+        restTemplate.postForEntity(getActualURI(), film2, Film.class);
+        film2.setId(2);
+
+        Film film3 = new Film(
+                0,
+                "third film",
+                "third",
+                LocalDate.parse("1922-03-25"),
+                100,
+                0,
+                new MPA(1, "G"),
+                new Director(1, "Famous Director"));
+        restTemplate.postForEntity(getActualURI(), film3, Film.class);
+        film3.setId(3);
+
+        restTemplate.postForEntity("/users", new User(
+                0,
+                "mail@mail.ru",
+                "FirstUser",
+                "",
+                LocalDate.parse("1966-08-20")), User.class);
+
+        restTemplate.postForEntity("/users", new User(
+                0,
+                "mail@yandex.ru",
+                "SecondUser",
+                "",
+                LocalDate.parse("1966-08-20")), User.class);
+
+        restTemplate.put(getActualURI() + "/2/like/1", null);
+        restTemplate.put(getActualURI() + "/2/like/2", null);
+        restTemplate.put(getActualURI() + "/1/like/1", null);
+
+        ResponseEntity<Collection<Film>> sortedByYear = restTemplate.exchange(
+                getActualURI() + "/director/1?sortBy=year",
+                HttpMethod.GET,
+                new HttpEntity<>(null),
+                new ParameterizedTypeReference<>() {
+                }
+        );
+        ResponseEntity<Collection<Film>> sortedByLikes = restTemplate.exchange(
+                getActualURI() + "/director/1?sortBy=likes",
+                HttpMethod.GET,
+                new HttpEntity<>(null),
+                new ParameterizedTypeReference<>() {
+                }
+        );
+
+        assertEquals(HttpStatus.OK, sortedByYear.getStatusCode());
+        assertEquals(List.of(film1, film2, film3), sortedByYear.getBody());
+
+        assertEquals(HttpStatus.OK, sortedByLikes.getStatusCode());
+        assertEquals(List.of(film2, film1, film3), sortedByLikes.getBody());
     }
 
     @Test
@@ -200,7 +279,7 @@ public class FilmControllerTest {
 
     @Test
     public void shouldThrowExceptionForNotFoundFilmDuringUpdate() {
-        Film film = makeDefaultFilm(1);
+        Film film = makeDefaultFilm();
         ResponseEntity<Film> response = restTemplate.exchange(
                 getActualURI(),
                 HttpMethod.PUT,
@@ -238,6 +317,7 @@ public class FilmControllerTest {
     }
 
     private Film makeDefaultFilm() {
+
         return new Film(
                 0,
                 "nisi eiusmod",
@@ -245,13 +325,8 @@ public class FilmControllerTest {
                 LocalDate.parse("1967-03-25"),
                 100,
                 0,
-                new MPA(1, "G"));
-    }
-
-    private Film makeDefaultFilm(int id) {
-        Film film = makeDefaultFilm();
-        film.setId(id);
-        return film;
+                new MPA(1, "G"),
+                new Director(1, "Famous Director"));
     }
 
     private Film makeCustomFilm(String name, String description, LocalDate date, Integer duration) {
@@ -275,7 +350,8 @@ public class FilmControllerTest {
                 date,
                 duration,
                 0,
-                new MPA(1, "G"));
+                new MPA(1, "G"),
+                new Director(1, "Famous Director"));
     }
 
     private Film addDefaultFilm() {
@@ -296,8 +372,8 @@ public class FilmControllerTest {
         );
     }
 
-    private User addDefaultUser() {
-        return restTemplate.postForObject("http://localhost:" + port + "/users", makeDefaultUser(), User.class);
+    private void addDefaultUser() {
+        restTemplate.postForObject("http://localhost:" + port + "/users", makeDefaultUser(), User.class);
     }
 
     private ResponseEntity<Film> addLikeDefault() {

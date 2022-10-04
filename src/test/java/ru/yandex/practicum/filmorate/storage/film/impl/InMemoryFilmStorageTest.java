@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 
@@ -17,6 +18,12 @@ public class InMemoryFilmStorageTest {
     Film film;
 
     @BeforeEach
+    public void addDirector() {
+        Director director = new Director(1, "Famous Director");
+        storage.addDirector(director);
+    }
+
+    @BeforeEach
     public void refreshFilmAndStorage() {
         film = new Film(
                 0,
@@ -25,7 +32,8 @@ public class InMemoryFilmStorageTest {
                 LocalDate.parse("1967-03-25"),
                 100,
                 0,
-                new MPA(1, "G"));
+                new MPA(1, "G"),
+                new Director(1, "Famous Director"));
         storage = new InMemoryFilmStorage();
     }
 
@@ -56,7 +64,8 @@ public class InMemoryFilmStorageTest {
                 LocalDate.parse("1967-03-25"),
                 100,
                 0,
-                new MPA(1, "G"));
+                new MPA(1, "G"),
+                new Director(1, "Famous Director"));
         storage.updateFilm(film, 1);
         assertEquals("updatedFilm", storage.getFilm(1).getName());
     }

@@ -33,6 +33,7 @@ public class Film {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private int rate;
     private final MPA mpa;
+    private final Director director;
     private final List<Genre> genres = new ArrayList<>();
     @JsonIgnore
     private final Set<Integer> likes = new HashSet<>();

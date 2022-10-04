@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dao.film;
 
 import lombok.AllArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -11,6 +12,7 @@ import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.dao.user.UserDAO;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
@@ -30,6 +32,12 @@ public class FilmDAOTest {
 
     FilmDAO filmStorage;
     UserDAO userStorage;
+
+    @BeforeEach
+    public void addDirector() {
+        Director director = new Director(1, "Famous Director");
+        filmStorage.addDirector(director);
+    }
 
     @Test
     public void addAndGetFilmTest() {
@@ -92,7 +100,8 @@ public class FilmDAOTest {
                 LocalDate.parse("1967-03-25"),
                 100,
                 0,
-                new MPA(filmStorage.getMPAs().size() + 1, "Abc"));
+                new MPA(filmStorage.getMPAs().size() + 1, "Abc"),
+                new Director(1, "Famous Director"));
         assertThrows(DataIntegrityViolationException.class, () -> filmStorage.addFilm(film1));
         Film film2 = makeDefaultFilm();
         film2.setRate(-5);
@@ -138,7 +147,8 @@ public class FilmDAOTest {
                 LocalDate.parse("1967-03-25"),
                 100,
                 0,
-                new MPA(1, "G"));
+                new MPA(1, "G"),
+                new Director(1, "Famous Director"));
     }
 
     private User makeDefaultUser() {

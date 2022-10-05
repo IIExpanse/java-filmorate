@@ -144,4 +144,9 @@ public class InMemoryFilmService implements FilmService {
     public void removeDirector(int id) {
         filmStorage.removeDirector(id);
     }
+
+    @Override
+    public void removeFilm(int id) {
+        filmStorage.removeFilm(id);
+    }
 }

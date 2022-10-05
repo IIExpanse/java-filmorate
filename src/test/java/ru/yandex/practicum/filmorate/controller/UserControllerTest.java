@@ -261,6 +261,26 @@ public class UserControllerTest {
         assertEquals(List.of(user), response.getBody());
     }
 
+    @Test
+    public void removeUserTest() {
+        addDefaultUser();
+
+        HttpStatus statusCode = restTemplate.exchange(
+                getActualURI() + "/1",
+                HttpMethod.DELETE,
+                new HttpEntity<>(null),
+                User.class
+        ).getStatusCode();
+
+        assertEquals(HttpStatus.OK, statusCode);
+
+        statusCode = restTemplate.getForEntity(getActualURI() + "/1",
+                User.class
+                ).getStatusCode();
+
+        assertEquals(HttpStatus.NOT_FOUND, statusCode);
+    }
+
     private User makeDefaultUser() {
         return new User(
                 0,

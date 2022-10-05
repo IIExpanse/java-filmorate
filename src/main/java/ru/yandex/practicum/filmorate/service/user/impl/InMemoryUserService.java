@@ -74,4 +74,9 @@ public class InMemoryUserService implements UserService {
 
         user.removeFriend(friendId);
     }
+
+    @Override
+    public void removeUser(int id) {
+        storage.removeUser(id);
+    }
 }

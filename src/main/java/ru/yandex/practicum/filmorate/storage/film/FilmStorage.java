@@ -41,4 +41,6 @@ public interface FilmStorage {
     void removeLike(int targetFilmId, int userId);
 
     void removeDirector(int id);
+
+    void removeFilm(int id);
 }

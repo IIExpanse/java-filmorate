@@ -86,6 +86,12 @@ public class UserController {
         log.debug("Пользователи с id={} и id={} удалены из списков друзей друг друга.", friendId, id);
     }
 
+    @DeleteMapping("/{userId}")
+    public void removeUser(@PathVariable int userId) {
+        service.removeUser(userId);
+        log.debug("Пользователь с id={} удален.", userId);
+    }
+
     private static void checkName(User user) {
         String name = user.getName();
         if (name == null || name.isBlank()) {

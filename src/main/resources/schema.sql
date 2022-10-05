@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS "films"
     "duration"     INT          NOT NULL,
     "rate"         INT          NOT NULL,
     "mpa_id"       INT REFERENCES "mpa_rating" ("mpa_id"),
-    "director_id"  INT          NULL,
     CONSTRAINT IF NOT EXISTS "not_blank" CHECK (LENGTH("film_name") > 0),
     CONSTRAINT IF NOT EXISTS "earliest_date" CHECK ("release_date" >= CAST('1895-12-28' AS DATE)),
     CONSTRAINT IF NOT EXISTS "positive" CHECK ("duration" > 0)

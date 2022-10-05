@@ -137,6 +137,18 @@ public class UserDAO implements UserStorage {
                 targetUserId, friendId);
     }
 
+    @Override
+    public void removeUser(int id) {
+        Integer responseId = getUserIdFromDB(id);
+
+        if (responseId == null) {
+            throw new UserNotFoundException(
+                    String.format("Ошибка удаления: пользователь с id=%d не найден.", id));
+        }
+
+        template.update("DELETE FROM \"users\" WHERE \"user_id\" = ?", id);
+    }
+
     private Integer getUserIdFromDB(int id) {
         Integer result;
         try {

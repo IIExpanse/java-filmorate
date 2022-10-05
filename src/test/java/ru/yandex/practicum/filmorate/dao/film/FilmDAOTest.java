@@ -134,6 +134,23 @@ public class FilmDAOTest {
     }
 
     @Test
+    public void removeFilmTest() {
+        Film film = makeDefaultFilm();
+        User user = makeDefaultUser();
+        filmStorage.addFilm(film);
+        film.setId(1);
+        assertEquals(film, filmStorage.getFilm(1));
+        userStorage.addUser(user);
+        user.setId(1);
+        filmStorage.addLike(1, 1);
+
+        filmStorage.removeFilm(1);
+        assertThrows(FilmNotFoundException.class, () -> filmStorage.getFilm(1));
+        assertThrows(FilmNotFoundException.class, () -> filmStorage.removeLike(1, 1));
+        assertEquals(user, userStorage.getUser(1));
+    }
+
+    @Test
     public void shouldThrowExceptionForRemovingNonExistentLike() {
         assertThrows(FilmNotFoundException.class, () -> filmStorage.removeLike(1, 1));
     }

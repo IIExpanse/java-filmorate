@@ -88,4 +88,11 @@ public class FilmController {
         service.removeLike(id, userId);
         log.debug("Удален лайк пользователя с id={} у фильма с id={}", userId, id);
     }
+
+    @DeleteMapping("/{filmId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void removeFilm(@PathVariable int filmId) {
+        service.removeFilm(filmId);
+        log.debug("Удален фильм с id={}", filmId);
+    }
 }

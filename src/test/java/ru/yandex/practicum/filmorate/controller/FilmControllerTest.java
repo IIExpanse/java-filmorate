@@ -316,6 +316,22 @@ public class FilmControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, statusCode);
     }
 
+    @Test
+    public void removeFilmTest() {
+        addDefaultFilm();
+        HttpStatus statusCode = restTemplate.exchange(
+                        getActualURI() + "/1",
+                        HttpMethod.DELETE,
+                        new HttpEntity<>(null),
+                        Film.class)
+                .getStatusCode();
+
+        assertEquals(HttpStatus.OK, statusCode);
+
+        statusCode = restTemplate.getForEntity(getActualURI() + "/1", Film.class).getStatusCode();
+        assertEquals(HttpStatus.NOT_FOUND, statusCode);
+    }
+
     private Film makeDefaultFilm() {
         Film film = new Film(
                 0,

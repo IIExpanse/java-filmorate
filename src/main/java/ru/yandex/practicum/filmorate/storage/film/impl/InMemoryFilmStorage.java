@@ -143,6 +143,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public void removeFilm(int id) {
+        filmsMap.remove(id);
+    }
+
+    @Override
     public void removeDirector(int id) {
         if (directorsMap.remove(id) == null) {
             throw new DirectorNotFoundException(

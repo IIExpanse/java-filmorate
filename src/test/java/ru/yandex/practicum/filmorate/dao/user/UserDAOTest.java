@@ -123,6 +123,16 @@ public class UserDAOTest {
         assertThrows(UserNotFoundException.class, () -> storage.removeFriend(3, 1));
     }
 
+    @Test
+    public void removeUser() {
+        User user = makeDefaultUser();
+        storage.addUser(user);
+        user.setId(1);
+
+        storage.removeUser(1);
+        assertThrows(UserNotFoundException.class, () -> storage.getUser(1));
+    }
+
     private User makeDefaultUser() {
         return new User(
                 0,

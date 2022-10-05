@@ -30,4 +30,6 @@ public interface FilmService {
     void updateFilm(Film film, int id);
 
     void removeLike(int targetFilmId, int userId);
+
+    Collection<Film> getFilmRecommendation(int userId);
 }

@@ -104,4 +104,9 @@ public class InMemoryFilmService implements FilmService {
         }
         filmStorage.removeLike(targetFilmId, userId);
     }
+
+
+    public Collection<Film> getFilmRecommendation(int userId) {
+        return filmStorage.getFilmRecommendation(userId);
+    }
 }

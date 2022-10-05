@@ -40,7 +40,7 @@ public class DirectorControllerTest {
                 "Famous Director"
         );
 
-        restTemplate.postForEntity("/directors", director, Integer.class);
+        restTemplate.postForEntity("/directors", director, Director.class);
 
         ResponseEntity<Director> response = restTemplate.getForEntity(
                 getActualURI() + "/1",
@@ -56,13 +56,13 @@ public class DirectorControllerTest {
                 1,
                 "Famous Director"
         );
-        restTemplate.postForEntity("/directors", director1, Integer.class);
+        restTemplate.postForEntity("/directors", director1, Director.class);
 
         Director director2 = new Director(
                 2,
                 "Second Director"
         );
-        restTemplate.postForEntity("/directors", director2, Integer.class);
+        restTemplate.postForEntity("/directors", director2, Director.class);
 
         ResponseEntity<Collection<Director>> response = restTemplate.exchange(
                 getActualURI(),
@@ -89,7 +89,7 @@ public class DirectorControllerTest {
         restTemplate.postForEntity("/directors", new Director(
                 1,
                 "Famous Director"
-        ), Integer.class);
+        ), Director.class);
 
         Director director = new Director(1, "Second Director");
         ResponseEntity<Director> response = restTemplate.exchange(

@@ -44,7 +44,7 @@ public class FilmControllerTest {
         restTemplate.postForEntity("/directors", new Director(
                 1,
                 "Famous Director"
-        ), Integer.class);
+        ), Director.class);
     }
 
     @Test
@@ -152,7 +152,7 @@ public class FilmControllerTest {
         );
 
         assertEquals(HttpStatus.OK, sortedByYear.getStatusCode());
-        assertEquals(List.of(film1, film2, film3), sortedByYear.getBody());
+        assertEquals(List.of(film3, film2, film1), sortedByYear.getBody());
 
         assertEquals(HttpStatus.OK, sortedByLikes.getStatusCode());
         assertEquals(List.of(film2, film1, film3), sortedByLikes.getBody());

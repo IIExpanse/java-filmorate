@@ -121,7 +121,7 @@ public class FilmDBServiceTest {
         film1.addLike(1);
 
         assertEquals(List.of(film2, film1, film3), service.getSortedDirectorFilms(1, SortType.LIKES));
-        assertEquals(List.of(film1, film2, film3), service.getSortedDirectorFilms(1, SortType.YEAR));
+        assertEquals(List.of(film3, film2, film1), service.getSortedDirectorFilms(1, SortType.YEAR));
     }
 
     private Film addUserAndFilm() {

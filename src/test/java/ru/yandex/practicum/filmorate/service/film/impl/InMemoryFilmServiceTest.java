@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
@@ -27,6 +28,8 @@ public class InMemoryFilmServiceTest {
 
     @BeforeEach
     public void refreshFields() {
+        Director director = new Director(1, "Famous Director");
+
         film = new Film(
                 0,
                 "nisi eiusmod",
@@ -43,8 +46,9 @@ public class InMemoryFilmServiceTest {
                 LocalDate.parse("1946-08-20"));
         filmStorage = new InMemoryFilmStorage();
         userStorage = new InMemoryUserStorage();
-
         service = new InMemoryFilmService(filmStorage, userStorage);
+
+        filmStorage.addDirector(director);
         filmStorage.addFilm(film);
         userStorage.addUser(user);
     }

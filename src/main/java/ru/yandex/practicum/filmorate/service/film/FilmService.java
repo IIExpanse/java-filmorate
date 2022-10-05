@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service.film;
 
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
@@ -23,13 +24,25 @@ public interface FilmService {
 
     List<MPA> getMPAs();
 
+    Director getDirector(int id);
+
+    Collection<Director> getDirectors();
+
+    Collection<Film> getSortedDirectorFilms(int id, SortType sortType);
+
     int addFilm(Film film);
 
     void addLike(int targetFilmId, int userId);
 
+    int addDirector(Director director);
+
     void updateFilm(Film film, int id);
 
+    void updateDirector(Director director);
+
     void removeLike(int targetFilmId, int userId);
+
+    void removeDirector(int id);
 
     void removeFilm(int id);
 }

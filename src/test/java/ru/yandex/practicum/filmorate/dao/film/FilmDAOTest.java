@@ -16,6 +16,7 @@ import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,6 +129,34 @@ public class FilmDAOTest {
     @Test
     public void shouldThrowExceptionForRemovingNonExistentLike() {
         assertThrows(FilmNotFoundException.class, () -> filmStorage.removeLike(1, 1));
+    }
+
+    @Test
+    public void getFilmRecommendationTest() {
+        Film film1 = makeDefaultFilm();
+        film1.setId(1);
+        Film film2 = makeDefaultFilm();
+        film2.setId(2);
+        Film film3 = makeDefaultFilm();
+        film3.setId(3);
+        User user1 = makeDefaultUser();
+        user1.setId(1);
+        User user2 = makeDefaultUser();
+        user2.setId(2);
+        filmStorage.addFilm(film1);
+        filmStorage.addFilm(film2);
+        filmStorage.addFilm(film3);
+        userStorage.addUser(user1);
+        userStorage.addUser(user1);
+
+        filmStorage.addLike(1, 1);
+        filmStorage.addLike(1, 2);
+        filmStorage.addLike(2, 2);
+        filmStorage.addLike(3, 2);
+
+        Collection<Film> filmRecommendation = filmStorage.getFilmRecommendation(user1.getId());
+        assertNotNull(filmRecommendation);
+        assertTrue(filmRecommendation.size() == 2);
     }
 
     private Film makeDefaultFilm() {

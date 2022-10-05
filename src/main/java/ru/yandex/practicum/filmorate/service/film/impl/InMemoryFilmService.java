@@ -91,7 +91,7 @@ public class InMemoryFilmService implements FilmService {
 
         if (sortType == SortType.YEAR) {
             return list.stream()
-                    .sorted(Comparator.comparing(Film::getReleaseDate).reversed())
+                    .sorted(Comparator.comparing(Film::getReleaseDate))
                     .collect(Collectors.toList());
         } else return list.stream()
                 .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())

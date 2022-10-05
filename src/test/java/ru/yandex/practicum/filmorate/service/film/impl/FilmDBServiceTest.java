@@ -88,8 +88,8 @@ public class FilmDBServiceTest {
                 LocalDate.parse("1944-03-25"),
                 100,
                 0,
-                new MPA(1, "G"),
-                new Director(1, "Famous Director"));
+                new MPA(1, "G"));
+        film2.addDirector(new Director(1, "Famous Director"));
         service.addFilm(film2);
         film2.setId(2);
 
@@ -100,8 +100,8 @@ public class FilmDBServiceTest {
                 LocalDate.parse("1922-03-25"),
                 100,
                 0,
-                new MPA(1, "G"),
-                new Director(1, "Famous Director"));
+                new MPA(1, "G"));
+        film3.addDirector(new Director(1, "Famous Director"));
         service.addFilm(film3);
         film3.setId(3);
 
@@ -132,8 +132,8 @@ public class FilmDBServiceTest {
                 LocalDate.parse("1967-03-25"),
                 100,
                 0,
-                new MPA(1, "G"),
-                new Director(1, "Famous Director"));
+                new MPA(1, "G"));
+        film.addDirector(new Director(1, "Famous Director"));
         film.setId(1);
         User user = new User(
                 0,

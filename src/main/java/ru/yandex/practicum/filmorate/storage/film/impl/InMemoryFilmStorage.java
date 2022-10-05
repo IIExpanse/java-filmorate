@@ -86,7 +86,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Collection<Film> getDirectorFilms(int id) {
         return getFilms().stream()
-                .filter(film -> film.getDirector().getId() == id)
+                .filter(film -> film.getDirectors().stream().anyMatch(director -> director.getId() == id))
                 .collect(Collectors.toList());
     }
 

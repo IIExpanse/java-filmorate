@@ -17,7 +17,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Repository("DirectorDAO")
 @Primary
@@ -67,6 +69,17 @@ public class DirectorDAO {
             throw new RuntimeException("Ошибка: режиссер не был добавлен.");
         }
         return id.intValue();
+    }
+
+    public void pairFilmsWithDirectors(int filmId, List<Integer> directorsIds) {
+        List<Object[]> list = new ArrayList<>();
+
+        for (int directorId : directorsIds) {
+            Object[] arr = {filmId, directorId};
+            list.add(arr);
+        }
+        template.batchUpdate("MERGE INTO \"film_directors\" (\"film_id\", \"director_id\")" +
+                "VALUES (?, ?)", list);
     }
 
     public void updateDirector(Director director) {

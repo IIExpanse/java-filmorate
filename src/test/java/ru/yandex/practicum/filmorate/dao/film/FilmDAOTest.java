@@ -42,7 +42,7 @@ public class FilmDAOTest {
     @Test
     public void addAndGetFilmTest() {
         Film film = makeDefaultFilm();
-        filmStorage.addFilm(film);
+        assertEquals(1, filmStorage.addFilm(film));
         film.setId(1);
 
         assertEquals(film, filmStorage.getFilm(1));
@@ -100,8 +100,7 @@ public class FilmDAOTest {
                 LocalDate.parse("1967-03-25"),
                 100,
                 0,
-                new MPA(filmStorage.getMPAs().size() + 1, "Abc"),
-                new Director(1, "Famous Director"));
+                new MPA(filmStorage.getMPAs().size() + 1, "Abc"));
         assertThrows(DataIntegrityViolationException.class, () -> filmStorage.addFilm(film1));
         Film film2 = makeDefaultFilm();
         film2.setRate(-5);
@@ -147,8 +146,7 @@ public class FilmDAOTest {
                 LocalDate.parse("1967-03-25"),
                 100,
                 0,
-                new MPA(1, "G"),
-                new Director(1, "Famous Director"));
+                new MPA(1, "G"));
     }
 
     private User makeDefaultUser() {

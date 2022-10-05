@@ -101,8 +101,8 @@ public class FilmControllerTest {
                 LocalDate.parse("1944-03-25"),
                 100,
                 0,
-                new MPA(1, "G"),
-                new Director(1, "Famous Director"));
+                new MPA(1, "G"));
+        film2.addDirector(new Director(1, "Famous Director"));
         restTemplate.postForEntity(getActualURI(), film2, Film.class);
         film2.setId(2);
 
@@ -113,8 +113,8 @@ public class FilmControllerTest {
                 LocalDate.parse("1922-03-25"),
                 100,
                 0,
-                new MPA(1, "G"),
-                new Director(1, "Famous Director"));
+                new MPA(1, "G"));
+        film3.addDirector(new Director(1, "Famous Director"));
         restTemplate.postForEntity(getActualURI(), film3, Film.class);
         film3.setId(3);
 
@@ -317,16 +317,17 @@ public class FilmControllerTest {
     }
 
     private Film makeDefaultFilm() {
-
-        return new Film(
+        Film film = new Film(
                 0,
                 "nisi eiusmod",
                 "adipisicing",
                 LocalDate.parse("1967-03-25"),
                 100,
                 0,
-                new MPA(1, "G"),
-                new Director(1, "Famous Director"));
+                new MPA(1, "G"));
+        film.addDirector(new Director(1, "Famous Director"));
+
+        return film;
     }
 
     private Film makeCustomFilm(String name, String description, LocalDate date, Integer duration) {
@@ -350,8 +351,7 @@ public class FilmControllerTest {
                 date,
                 duration,
                 0,
-                new MPA(1, "G"),
-                new Director(1, "Famous Director"));
+                new MPA(1, "G"));
     }
 
     private Film addDefaultFilm() {

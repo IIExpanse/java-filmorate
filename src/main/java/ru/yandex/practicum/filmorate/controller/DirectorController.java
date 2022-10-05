@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 
+import javax.validation.Valid;
 import java.util.Collection;
 
 @Validated
@@ -34,15 +35,16 @@ public class DirectorController {
     }
 
     @PostMapping
-    public ResponseEntity<Integer> addDirector(@RequestBody Director director) {
+    public ResponseEntity<Director> addDirector(@Valid @RequestBody Director director) {
         int id = service.addDirector(director);
-        log.debug("Добавлен новый режиссер: {}", new Director(id, director.getName()));
+        director = new Director(id, director.getName());
+        log.debug("Добавлен новый режиссер: {}", director);
 
-        return new ResponseEntity<>(id, HttpStatus.CREATED);
+        return new ResponseEntity<>(director, HttpStatus.CREATED);
     }
 
     @PutMapping
-    public ResponseEntity<Director> updateDirector(@RequestBody Director director) {
+    public ResponseEntity<Director> updateDirector(@Valid @RequestBody Director director) {
         service.updateDirector(director);
         log.debug("Обновлены данные о директоре с id={}", director.getId());
 

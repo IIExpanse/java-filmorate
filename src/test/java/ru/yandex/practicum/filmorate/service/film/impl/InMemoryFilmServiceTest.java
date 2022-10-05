@@ -37,8 +37,7 @@ public class InMemoryFilmServiceTest {
                 LocalDate.parse("1967-03-25"),
                 100,
                 0,
-                new MPA(1, "G"),
-                new Director(1, "Famous Director"));
+                new MPA(1, "G"));
         User user = new User(
                 0,
                 "mail@mail.ru",
@@ -87,8 +86,7 @@ public class InMemoryFilmServiceTest {
                 LocalDate.parse("1989-03-25"),
                 100,
                 0,
-                new MPA(1, "G"),
-                new Director(1, "Famous Director"));
+                new MPA(1, "G"));
         filmStorage.addFilm(film1);
         film.addLike(1);
         assertTrue(service.getPopularFilms(10).contains(film));

@@ -76,13 +76,12 @@ public class DirectorControllerTest {
 
     @Test
     public void addDirectorTest() {
-        ResponseEntity<Integer> response = restTemplate.postForEntity("/directors", new Director(
-                1,
-                "Famous Director"
-        ), Integer.class);
+        Director director = new Director(1, "Famous Director");
+
+        ResponseEntity<Director> response = restTemplate.postForEntity("/directors", director, Director.class);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(1, response.getBody());
+        assertEquals(director, response.getBody());
     }
 
     @Test

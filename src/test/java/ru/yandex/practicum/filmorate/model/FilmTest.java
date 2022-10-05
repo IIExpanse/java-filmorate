@@ -22,8 +22,7 @@ public class FilmTest {
                 LocalDate.parse("1967-03-25"),
                 100,
                 0,
-                new MPA(1, "G"),
-                new Director(1, "Famous Director"));
+                new MPA(1, "G"));
     }
 
     @Test

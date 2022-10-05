@@ -42,16 +42,23 @@ CREATE TABLE IF NOT EXISTS "films"
     "duration"     INT          NOT NULL,
     "rate"         INT          NOT NULL,
     "mpa_id"       INT REFERENCES "mpa_rating" ("mpa_id"),
-    "director_id"  INT REFERENCES "directors" ("director_id"),
+    "director_id"  INT          NULL,
     CONSTRAINT IF NOT EXISTS "not_blank" CHECK (LENGTH("film_name") > 0),
     CONSTRAINT IF NOT EXISTS "earliest_date" CHECK ("release_date" >= CAST('1895-12-28' AS DATE)),
     CONSTRAINT IF NOT EXISTS "positive" CHECK ("duration" > 0)
 );
 
+CREATE TABLE IF NOT EXISTS "film_directors"
+(
+    "film_id"     INT REFERENCES "films" ("film_id") ON DELETE CASCADE,
+    "director_id" INT REFERENCES "directors" ("director_id") ON DELETE CASCADE,
+    PRIMARY KEY ("film_id", "director_id")
+);
+
 CREATE TABLE IF NOT EXISTS "film_genres"
 (
-    "film_id"  INT REFERENCES "films" ("film_id"),
-    "genre_id" INT REFERENCES "genres" ("genre_id"),
+    "film_id"  INT REFERENCES "films" ("film_id") ON DELETE CASCADE,
+    "genre_id" INT REFERENCES "genres" ("genre_id") ON DELETE CASCADE,
     PRIMARY KEY ("film_id", "genre_id")
 );
 
@@ -68,14 +75,14 @@ CREATE TABLE IF NOT EXISTS "users"
 
 CREATE TABLE IF NOT EXISTS "friendships_sent"
 (
-    "from_user_id" INT REFERENCES "users" ("user_id"),
-    "to_user_id"   INT REFERENCES "users" ("user_id"),
+    "from_user_id" INT REFERENCES "users" ("user_id") ON DELETE CASCADE,
+    "to_user_id"   INT REFERENCES "users" ("user_id") ON DELETE CASCADE,
     PRIMARY KEY ("from_user_id", "to_user_id")
 );
 
 CREATE TABLE IF NOT EXISTS "likes"
 (
-    "film_id"      INT REFERENCES "films" ("film_id"),
-    "from_user_id" INT REFERENCES "users" ("user_id"),
+    "film_id"      INT REFERENCES "films" ("film_id") ON DELETE CASCADE,
+    "from_user_id" INT REFERENCES "users" ("user_id") ON DELETE CASCADE,
     PRIMARY KEY ("film_id", "from_user_id")
 );

@@ -3,10 +3,12 @@ package ru.yandex.practicum.filmorate.service.film.impl;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
+import ru.yandex.practicum.filmorate.service.film.SortType;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -74,6 +76,29 @@ public class InMemoryFilmService implements FilmService {
     }
 
     @Override
+    public Director getDirector(int id) {
+        return filmStorage.getDirector(id);
+    }
+
+    @Override
+    public Collection<Director> getDirectors() {
+        return filmStorage.getDirectors();
+    }
+
+    @Override
+    public Collection<Film> getSortedDirectorFilms(int id, SortType sortType) {
+        Collection<Film> list = filmStorage.getDirectorFilms(id);
+
+        if (sortType == SortType.YEAR) {
+            return list.stream()
+                    .sorted(Comparator.comparing(Film::getReleaseDate))
+                    .collect(Collectors.toList());
+        } else return list.stream()
+                .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void addLike(int targetFilmId, int userId) {
         if (userStorage.getUser(userId) == null) {
             throw new UserNotFoundException(
@@ -90,8 +115,18 @@ public class InMemoryFilmService implements FilmService {
     }
 
     @Override
+    public int addDirector(Director director) {
+        return filmStorage.addDirector(director);
+    }
+
+    @Override
     public void updateFilm(Film film, int id) {
         filmStorage.updateFilm(film, id);
+    }
+
+    @Override
+    public void updateDirector(Director director) {
+        filmStorage.updateDirector(director);
     }
 
     @Override
@@ -103,5 +138,10 @@ public class InMemoryFilmService implements FilmService {
             );
         }
         filmStorage.removeLike(targetFilmId, userId);
+    }
+
+    @Override
+    public void removeDirector(int id) {
+        filmStorage.removeDirector(id);
     }
 }

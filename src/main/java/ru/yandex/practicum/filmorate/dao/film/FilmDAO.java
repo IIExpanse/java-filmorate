@@ -12,12 +12,15 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dao.director.DirectorDAO;
 import ru.yandex.practicum.filmorate.dao.genre.GenreDAO;
 import ru.yandex.practicum.filmorate.dao.mpa.MpaDAO;
+import ru.yandex.practicum.filmorate.exception.director.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
@@ -26,6 +29,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import java.sql.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository("FilmDAO")
 @Primary
@@ -35,13 +39,15 @@ public class FilmDAO implements FilmStorage {
     private final JdbcTemplate template;
     private final GenreDAO genreDAO;
     private final MpaDAO mpaDAO;
+    private final DirectorDAO directorDAO;
 
     @Override
     public Film getFilm(int id) {
         Film film;
         try {
             film = template.queryForObject("SELECT * FROM \"films\"" +
-                            "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\" WHERE \"film_id\" = " + id,
+                            "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\" " +
+                            "WHERE \"film_id\" = " + id,
                     new FilmMapper());
         } catch (DataAccessException e) {
             throw new FilmNotFoundException(String.format("Ошибка получения: фильм с id=%d не найден.", id));
@@ -54,6 +60,23 @@ public class FilmDAO implements FilmStorage {
     public Collection<Film> getFilms() {
         return template.query("SELECT * FROM \"films\" " +
                 "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\"", new FilmMapper());
+    }
+
+    @Override
+    public Collection<Film> getDirectorFilms(int id) {
+        try {
+            template.queryForObject("SELECT \"director_id\" " +
+                    "FROM \"directors\" WHERE \"director_id\" = " + id, Integer.class);
+        } catch (DataAccessException e) {
+            throw new DirectorNotFoundException(String.format("Режиссер с id=%d не найден.", id));
+        }
+
+        return template.query("SELECT * FROM \"films\"" +
+                "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\"" +
+                "WHERE \"film_id\" IN (" +
+                    "SELECT \"film_id\" " +
+                    "FROM \"film_directors\"" +
+                    "WHERE \"director_id\" = " + id + ")", new FilmMapper());
     }
 
     @Override
@@ -77,6 +100,16 @@ public class FilmDAO implements FilmStorage {
     }
 
     @Override
+    public Director getDirector(int id) {
+        return directorDAO.getDirector(id);
+    }
+
+    @Override
+    public Collection<Director> getDirectors() {
+        return directorDAO.getDirectors();
+    }
+
+    @Override
     public int addFilm(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         Number id;
@@ -89,7 +122,8 @@ public class FilmDAO implements FilmStorage {
                             "\"release_date\", " +
                             "\"duration\", " +
                             "\"rate\"," +
-                            "\"mpa_id\") VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+                            "\"mpa_id\") " +
+                            "VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, film.getName());
             ps.setString(2, film.getDescription());
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
@@ -105,6 +139,10 @@ public class FilmDAO implements FilmStorage {
         }
 
         genreDAO.insertGenres(film, id.intValue());
+        directorDAO.pairFilmsWithDirectors(id.intValue(),
+                film.getDirectors().stream()
+                        .map(Director::getId)
+                        .collect(Collectors.toList()));
         return id.intValue();
     }
 
@@ -129,6 +167,10 @@ public class FilmDAO implements FilmStorage {
                     String.format("Ошибка при добавлении лайка для фильма с id=%d " +
                             "от пользователя с id=%d: пользователь не найден.", userId, targetFilmId));
         }
+    }
+
+    public int addDirector(Director director) {
+        return directorDAO.addDirector(director);
     }
 
     @Override
@@ -156,7 +198,22 @@ public class FilmDAO implements FilmStorage {
                 id);
 
         template.update("DELETE FROM \"film_genres\" WHERE \"film_id\" = ?", id);
+        template.update("DELETE FROM \"film_directors\" Where \"film_id\" = ?", id);
         genreDAO.insertGenres(film, id);
+        directorDAO.pairFilmsWithDirectors(id,
+                film.getDirectors().stream()
+                        .map(Director::getId)
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public void removeDirector(int id) {
+        directorDAO.removeDirector(id);
+    }
+
+    @Override
+    public void updateDirector(Director director) {
+        directorDAO.updateDirector(director);
     }
 
     @Override
@@ -203,11 +260,26 @@ public class FilmDAO implements FilmStorage {
         }
     }
 
+    private void addDirectorsIdsToDTO(Film film, int id) {
+        SqlRowSet rowSet = template.queryForRowSet(
+                "SELECT * FROM \"directors\"" +
+                        "WHERE \"director_id\" IN (" +
+                            "(SELECT DISTINCT \"director_id\" " +
+                            "FROM \"film_directors\" " +
+                            "WHERE \"film_id\" = ?))", id);
+
+        while (rowSet.next()) {
+            film.addDirector(new Director(
+                    rowSet.getInt("director_id"),
+                    rowSet.getString("director_name")
+            ));
+        }
+    }
+
     class FilmMapper implements RowMapper<Film> {
         @Override
         public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
             int filmId = rs.getInt("film_id");
-            int mpaId = rs.getInt("mpa_id");
 
             Film film = new Film(filmId,
                     rs.getString("film_name"),
@@ -215,13 +287,14 @@ public class FilmDAO implements FilmStorage {
                     rs.getDate("release_date").toLocalDate(),
                     rs.getInt("duration"),
                     rs.getInt("rate"),
-                    new MPA(mpaId, rs.getString("mpa_name")));
+                    new MPA(rs.getInt("mpa_id"), rs.getString("mpa_name")));
 
             List<Genre> genres = genreDAO.getFilmGenres(filmId);
             for (Genre genre : genres) {
                 film.addGenre(genre);
             }
             addLikesToDTO(film, filmId);
+            addDirectorsIdsToDTO(film, filmId);
 
             return film;
         }

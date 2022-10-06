@@ -304,7 +304,7 @@ public class UserControllerTest {
         addLikeDefault(3, 2);
 
         response = restTemplate.exchange(
-                getActualURI() + "/1/recommendation",
+                getActualURI() + "/1/recommendations",
                 HttpMethod.GET,
                 new HttpEntity<>(null),
                 new ParameterizedTypeReference<>() {

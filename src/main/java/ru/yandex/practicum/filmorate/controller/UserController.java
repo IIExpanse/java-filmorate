@@ -96,7 +96,7 @@ public class UserController {
         log.debug("Пользователь с id={} удален.", userId);
     }
 
-    @GetMapping("/{id}/recommendation")
+    @GetMapping("/{id}/recommendations")
     public ResponseEntity<Collection<Film>> getFilmRecommendation(@PathVariable int id) {
         return ResponseEntity.ok(filmService.getFilmRecommendation(id));
     }

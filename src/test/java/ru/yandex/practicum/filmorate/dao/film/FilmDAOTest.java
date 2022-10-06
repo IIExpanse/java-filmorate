@@ -147,7 +147,7 @@ public class FilmDAOTest {
         filmStorage.addFilm(film2);
         filmStorage.addFilm(film3);
         userStorage.addUser(user1);
-        userStorage.addUser(user1);
+        userStorage.addUser(user2);
 
         filmStorage.addLike(1, 1);
         filmStorage.addLike(1, 2);

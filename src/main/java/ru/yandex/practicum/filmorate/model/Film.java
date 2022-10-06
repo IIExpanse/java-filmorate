@@ -34,6 +34,7 @@ public class Film {
     private int rate;
     private final MPA mpa;
     private final List<Genre> genres = new ArrayList<>();
+    private final List<Director> directors = new ArrayList<>();
     @JsonIgnore
     private final Set<Integer> likes = new HashSet<>();
 
@@ -58,6 +59,10 @@ public class Film {
 
     public void addGenre(Genre g) {
         genres.add(g);
+    }
+
+    public void addDirector(Director d) {
+        directors.add(d);
     }
 
     private void updateRate() {

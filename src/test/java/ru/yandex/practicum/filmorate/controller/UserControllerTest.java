@@ -264,6 +264,26 @@ public class UserControllerTest {
     }
 
     @Test
+    public void removeUserTest() {
+        addDefaultUser();
+
+        HttpStatus statusCode = restTemplate.exchange(
+                getActualURI() + "/1",
+                HttpMethod.DELETE,
+                new HttpEntity<>(null),
+                User.class
+        ).getStatusCode();
+
+        assertEquals(HttpStatus.OK, statusCode);
+
+        statusCode = restTemplate.getForEntity(getActualURI() + "/1",
+                User.class
+                ).getStatusCode();
+
+        assertEquals(HttpStatus.NOT_FOUND, statusCode);
+    }
+
+    @Test
     public void getFilmRecommendationTest() {
         ResponseEntity<Collection<Film>> response;
 

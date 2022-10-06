@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
+import ru.yandex.practicum.filmorate.service.film.SortType;
 
 import javax.validation.Valid;
 import java.util.Collection;
@@ -38,6 +39,13 @@ public class FilmController {
     @GetMapping("/popular")
     public ResponseEntity<Collection<Film>> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
         return ResponseEntity.ok(service.getPopularFilms(count));
+    }
+
+    @GetMapping("/director/{id}")
+    public ResponseEntity<Collection<Film>> getSortedDirectorFilms(@PathVariable int id,
+                                                                   @RequestParam String sortBy) {
+
+        return ResponseEntity.ok(service.getSortedDirectorFilms(id, SortType.valueOf(sortBy.toUpperCase())));
     }
 
     @GetMapping("/genres/{id}")
@@ -79,5 +87,12 @@ public class FilmController {
     public void removeLike(@PathVariable int id, @PathVariable int userId) {
         service.removeLike(id, userId);
         log.debug("Удален лайк пользователя с id={} у фильма с id={}", userId, id);
+    }
+
+    @DeleteMapping("/{filmId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void removeFilm(@PathVariable int filmId) {
+        service.removeFilm(filmId);
+        log.debug("Удален фильм с id={}", filmId);
     }
 }

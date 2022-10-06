@@ -5,12 +5,10 @@ import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Repository(value = "InMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
@@ -98,8 +96,44 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getFilmRecommendation(int userId) {
-        Collection<Film> filmRecommendation = getFilmRecommendation(userId);
-        return filmRecommendation;
+        Collection<Film> recommendedFilms = new ArrayList<>();
+        Set<Integer> userIdWithCommonFilmLikes = new HashSet<>();
+        Collection<Film> allFilms = getFilms();
+        for (Film film : allFilms) {
+            Set<Integer> likes = film.getLikes();
+            if (likes == null) {
+                return allFilms;
+            }
+            for (Integer user : likes) {
+                if (user == userId) {
+                    for (int i : likes) {
+                        if (i != userId) {
+                            userIdWithCommonFilmLikes.add(i);
+                        }
+                    }
+
+                }
+            }
+        }
+        for (Film film : allFilms) {
+            Set<Integer> likes = film.getLikes();
+            for (Integer user : likes) {
+                for (Integer userWithCommonInterest : userIdWithCommonFilmLikes) {
+                    if (user == userWithCommonInterest) {
+                        for (Integer i : likes) {
+                            if (i == userId) {
+                                break;
+                            } else if (i != userId) {
+                                recommendedFilms.add(film);;
+                            }
+                        }
+
+                    }
+                }
+
+            }
+        }
+        return recommendedFilms;
     }
 
     private int generateNewId() {

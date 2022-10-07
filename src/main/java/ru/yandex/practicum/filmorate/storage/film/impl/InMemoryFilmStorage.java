@@ -151,9 +151,6 @@ public class InMemoryFilmStorage implements FilmStorage {
         Collection<Film> allFilms = getFilms();
         for (Film film : allFilms) {
             Set<Integer> likes = film.getLikes();
-            if (likes == null) {
-                return allFilms;
-            }
             for (Integer user : likes) {
                 if (user == userId) {
                     for (int i : likes) {

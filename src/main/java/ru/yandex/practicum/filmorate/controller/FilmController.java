@@ -41,6 +41,12 @@ public class FilmController {
         return ResponseEntity.ok(service.getPopularFilms(count));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<Collection<Film>> searchFilms(@RequestParam String query,
+                                                        @RequestParam String by) {
+        return ResponseEntity.ok(service.searchFilms(query, by));
+    }
+
     @GetMapping("/director/{id}")
     public ResponseEntity<Collection<Film>> getSortedDirectorFilms(@PathVariable int id,
                                                                    @RequestParam String sortBy) {

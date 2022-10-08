@@ -149,4 +149,9 @@ public class InMemoryFilmService implements FilmService {
     public void removeFilm(int id) {
         filmStorage.removeFilm(id);
     }
+
+    @Override
+    public Collection<Film> searchFilms(String query, String by) {
+        return null;
+    }
 }

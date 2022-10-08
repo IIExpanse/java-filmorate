@@ -14,7 +14,7 @@ public interface FilmService {
 
     Collection<Film> getFilms();
 
-    Collection<Film> getPopularFilms(int count);
+    Collection<Film> getPopularFilms(int count, int genreId, int year);
 
     Genre getGenre(int id);
 
@@ -45,6 +45,8 @@ public interface FilmService {
     void removeDirector(int id);
 
     void removeFilm(int id);
+
+    Collection<Film> searchFilms(String query, String by);
 
     Collection<Film> getFilmRecommendation(int userId);
 }

@@ -201,6 +201,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
     }
 
+    @Override
+    public Collection<Film> searchFilms(String query, String by) {
+        return null;
+    }
+
     private int generateNewFilmId() {
         return filmIdCounter++;
     }

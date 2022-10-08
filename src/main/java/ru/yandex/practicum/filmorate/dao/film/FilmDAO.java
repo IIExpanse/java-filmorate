@@ -266,6 +266,24 @@ public class FilmDAO implements FilmStorage {
         template.update("DELETE FROM \"films\" WHERE \"film_id\" = ? ", id);
     }
 
+    public Collection<Film> searchFilms(String query, String by) {
+        String director = null;
+        String title = null;
+        if (by.contains("director")) {
+            director = "'%" + query.toLowerCase() + "%'";
+        }
+        if (by.contains("title")) {
+            title = "'%" + query.toLowerCase() + "%'";
+        }
+        //String forSearchByTitle = "'%" + query.toLowerCase() + "%'";
+        return template.query("SELECT * FROM \"films\" f " +
+                "LEFT JOIN \"mpa_rating\" mr ON f.\"mpa_id\" = mr.\"mpa_id\" " +
+                "LEFT JOIN \"film_directors\" fd ON f.\"film_id\" = fd.\"film_id\" " +
+                "LEFT JOIN \"directors\" d ON fd.\"director_id\" = d.\"director_id\" " +
+                "WHERE LOWER(f.\"film_name\") LIKE " + title +
+                " OR LOWER(d.\"director_name\") LIKE " + director, new FilmMapper());
+    }
+
     private Integer getIdFromDB(int id) {
         Integer result;
         try {

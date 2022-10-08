@@ -44,5 +44,7 @@ public interface FilmStorage {
 
     void removeFilm(int id);
 
+    Collection<Film> searchFilms(String query, String by);
+
     Collection<Film> getFilmRecommendation(int userId);
 }

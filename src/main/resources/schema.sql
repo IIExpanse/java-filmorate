@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS reviews
     user_id     INT REFERENCES "users" ("user_id") ON DELETE CASCADE,
     is_positive BOOLEAN,
     content     VARCHAR NOT NULL,
-    useful      INT DEFAULT 0,
+    /*useful      INT DEFAULT 0,*/        /*Лишний столбец в таблице.*/
     PRIMARY KEY (review_id)
 );
 
@@ -90,4 +90,17 @@ CREATE TABLE IF NOT EXISTS review_like_dislike
     user_id   INT REFERENCES "users" ("user_id") ON DELETE CASCADE,
     is_like   BOOLEAN,
     PRIMARY KEY (review_id, user_id)
-)
+);
+
+CREATE TABLE IF NOT EXISTS like_value
+(
+    number_value INT AUTO_INCREMENT,
+    is_like BOOLEAN,
+    value_like INT,
+    PRIMARY KEY (number_value)
+);
+
+MERGE INTO like_value (number_value, is_like, value_like)
+    VALUES (1, true, 1),
+           (2, false, -1)
+;

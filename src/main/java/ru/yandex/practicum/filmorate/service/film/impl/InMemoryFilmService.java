@@ -40,14 +40,24 @@ public class InMemoryFilmService implements FilmService {
     }
 
     @Override
-    public Collection<Film> getPopularFilms(int count) {
-        Collection<Film> popularFilmsList = List.copyOf(
-                filmStorage.getFilms().stream()
-                        .sorted(Comparator.comparing(Film::getRate).reversed())
-                        .limit(count)
-                        .collect(Collectors.toList()));
+    public Collection<Film> getPopularFilms(int count, int genreId, int year) {
+        Collection<Film> popularFilmsList = filmStorage.getFilms();
+        if (genreId != 9999) {
+            popularFilmsList = popularFilmsList.stream()
+                    .filter(f -> f.getGenres().contains(getGenre(genreId)))
+                    .collect(Collectors.toList());
+        }
+        if (year != 9999) {
+            popularFilmsList = popularFilmsList.stream()
+                    .filter(f -> f.getReleaseDate().getYear() == year)
+                    .collect(Collectors.toList());
+        }
+        popularFilmsList = popularFilmsList.stream()
+                .sorted(Comparator.comparing(Film::getRate).reversed())
+                .limit(count)
+                .collect(Collectors.toList());
 
-        if (popularFilmsList.isEmpty()) {
+        if (popularFilmsList.isEmpty() && (genreId == 9999 && year == 9999)) {
             popularFilmsList = filmStorage.getFilms().stream()
                     .limit(count)
                     .collect(Collectors.toList());

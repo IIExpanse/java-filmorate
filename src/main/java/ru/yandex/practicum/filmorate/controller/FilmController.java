@@ -12,6 +12,8 @@ import ru.yandex.practicum.filmorate.service.film.FilmService;
 import ru.yandex.practicum.filmorate.service.film.SortType;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
 import java.util.Collection;
 
 @Validated
@@ -37,8 +39,10 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public ResponseEntity<Collection<Film>> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        return ResponseEntity.ok(service.getPopularFilms(count));
+    public ResponseEntity<Collection<Film>> getPopularFilms(@RequestParam(defaultValue = "10") @Positive int count,
+                                                            @RequestParam(defaultValue = "9999") @Positive int genreId,
+                                                            @RequestParam(defaultValue = "9999") @Positive @Min(1895) int year) {
+        return ResponseEntity.ok(service.getPopularFilms(count, genreId, year));
     }
 
     @GetMapping("/search")

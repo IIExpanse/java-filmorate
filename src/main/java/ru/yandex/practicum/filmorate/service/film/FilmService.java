@@ -14,7 +14,7 @@ public interface FilmService {
 
     Collection<Film> getFilms();
 
-    Collection<Film> getPopularFilms(int count);
+    Collection<Film> getPopularFilms(int count, int genreId, int year);
 
     Genre getGenre(int id);
 

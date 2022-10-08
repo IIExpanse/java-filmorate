@@ -89,15 +89,14 @@ public class InMemoryFilmServiceTest {
                 new MPA(1, "G"));
         filmStorage.addFilm(film1);
         film.addLike(1);
-        assertTrue(service.getPopularFilms(10, 1, 1989).contains(film));
+        assertTrue(service.getPopularFilms(10, 9999, 9999).contains(film));
 
         film1.addLike(1);
-        assertEquals(2, service.getPopularFilms(10, 1, 1989).size());
-        assertTrue(service.getPopularFilms(10, 1, 1989).contains(film1));
+        assertEquals(2, service.getPopularFilms(10, 9999, 9999).size());
+        assertTrue(service.getPopularFilms(10, 9999, 9999).contains(film1));
 
         film.addLike(2);
-        assertEquals(List.of(film, film1), service.getPopularFilms(10, 1, 1989));
+        assertEquals(List.of(film, film1), service.getPopularFilms(10, 9999, 9999));
 
-        assertEquals(1, service.getPopularFilms(10, 1, 1989).size());
     }
 }

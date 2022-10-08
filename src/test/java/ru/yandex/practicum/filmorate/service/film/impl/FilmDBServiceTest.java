@@ -74,8 +74,8 @@ public class FilmDBServiceTest {
         film.setId(1);
 
         service.addLike(1, 1);
-        assertEquals(1, service.getPopularFilms(1, 1, 1967).size());
-        assertTrue(service.getPopularFilms(1, 1, 1967).contains(service.getFilm(1)));
+        assertEquals(1, service.getPopularFilms(1, 9999, 9999).size());
+        assertTrue(service.getPopularFilms(1, 9999, 9999).contains(service.getFilm(1)));
     }
 
     @Test

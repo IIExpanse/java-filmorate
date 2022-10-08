@@ -240,6 +240,22 @@ public class FilmDAO implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> getFilmRecommendation(int userId) {
+        String sqlQuery = "SELECT * FROM \"films\" as f" +
+                " LEFT JOIN \"mpa_rating\" as mr ON f.\"mpa_id\" = mr.\"mpa_id\"" +
+                " WHERE f.\"film_id\" in (select \"film_id\" from \"likes\"" +
+        " where \"film_id\" in (select \"film_id\"" +
+                " where (select \"from_user_id\" from \"likes\"" +
+                        " where \"film_id\" IN (select \"film_id\" from \"likes\"" +
+                                " where \"from_user_id\"= ?) and \"from_user_id\" not in (?))" +
+                " and \"film_id\" not IN (select \"film_id\" from \"likes\"" +
+                        " where \"from_user_id\"= ?)))";
+
+        List<Film> films = template.query(sqlQuery, new FilmMapper(), userId, userId, userId);
+        return films;
+    }
+
+    @Override
     public void removeFilm(int id) {
         Integer responseId = getIdFromDB(id);
 

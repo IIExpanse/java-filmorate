@@ -164,4 +164,9 @@ public class InMemoryFilmService implements FilmService {
     public Collection<Film> searchFilms(String query, String by) {
         return null;
     }
+
+
+    public Collection<Film> getFilmRecommendation(int userId) {
+        return filmStorage.getFilmRecommendation(userId);
+    }
 }

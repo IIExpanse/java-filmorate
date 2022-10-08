@@ -43,4 +43,6 @@ public interface FilmStorage {
     void removeDirector(int id);
 
     void removeFilm(int id);
+
+    Collection<Film> searchFilms(String query, String by);
 }

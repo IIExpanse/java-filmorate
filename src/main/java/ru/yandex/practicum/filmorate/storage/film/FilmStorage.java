@@ -28,6 +28,8 @@ public interface FilmStorage {
 
     Collection<Film> getDirectorFilms(int id);
 
+    Collection<Film> getCommonFilms(int userId, int friendId);
+
     int addFilm(Film film);
 
     int addDirector(Director director);

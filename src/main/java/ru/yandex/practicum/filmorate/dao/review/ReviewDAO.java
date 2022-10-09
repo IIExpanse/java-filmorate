@@ -1,14 +1,24 @@
 package ru.yandex.practicum.filmorate.dao.review;
 
-import lombok.AllArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Review;
 
-@Repository("ReviewDAO")
-@AllArgsConstructor
-public class ReviewDAO {
-    private final JdbcTemplate jdbcTemplate;
-    
-    // TODO: 2022.10.09 04:41:51 Удалить этот класс или сюда переместить из другой пакпи ReviewUserReact
-    //  - @Dmitriy_Gaju
+import java.util.Collection;
+
+public interface ReviewDAO {
+
+    Review getReviewById(int reviewId);
+
+    Collection<Review> getAllReviews();
+
+    Collection<Review> getReviewsByFilmId(int filmId);
+
+    Review addReview(Review review);
+
+    void addValueToReview(int reviewId, int userId, boolean isLike);
+
+    Review updateReview(Review review);
+
+    void removeReview(int reviewId);
+
+    void removeValueFromReview(int reviewId, int userId, boolean isLike);
 }

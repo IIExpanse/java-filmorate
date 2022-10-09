@@ -30,6 +30,8 @@ public interface FilmService {
 
     Collection<Film> getSortedDirectorFilms(int id, SortType sortType);
 
+    Collection<Film> getCommonFilms(int firstUserId, int secondUserId);
+
     int addFilm(Film film);
 
     void addLike(int targetFilmId, int userId);

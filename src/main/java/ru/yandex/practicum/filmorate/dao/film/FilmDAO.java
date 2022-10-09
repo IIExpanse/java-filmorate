@@ -82,6 +82,25 @@ public class FilmDAO implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> getCommonFilms(int firstUserId, int secondUserId) {
+        String sql = "SELECT \"film_id\" FROM \"likes\" WHERE \"from_user_id\" = ?";
+
+        List<Integer> likedFilms1 = template.query(sql, (rs, rowNum) -> rs.getInt("film_id"), firstUserId);
+        List<Integer> likedFilms2 = template.query(sql, (rs, rowNum) -> rs.getInt("film_id"), secondUserId);
+        String[] sharedFilms = likedFilms1.stream()
+                .filter(likedFilms2::contains)
+                .map(String::valueOf)
+                .toArray(String[]::new);
+        String argsList = String.join(",", sharedFilms);
+
+        sql = String.format("SELECT * FROM \"films\" " +
+                "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\" " +
+                "WHERE \"film_id\" IN (%s)", argsList);
+
+        return template.query(sql, new FilmMapper());
+    }
+
+    @Override
     public Genre getGenre(int id) {
         return genreDAO.getGenre(id);
     }

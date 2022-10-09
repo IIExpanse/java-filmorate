@@ -58,6 +58,11 @@ public class FilmController {
         return ResponseEntity.ok(service.getSortedDirectorFilms(id, SortType.valueOf(sortBy.toUpperCase())));
     }
 
+    @GetMapping("/common")
+    public ResponseEntity<Collection<Film>> getCommonFilms(@RequestParam int userId, @RequestParam int friendId) {
+        return ResponseEntity.ok(service.getCommonFilms(userId, friendId));
+    }
+
     @GetMapping("/genres/{id}")
     public ResponseEntity<Genre> getGenre(@PathVariable int id) {
         return ResponseEntity.ok(service.getGenre(id));

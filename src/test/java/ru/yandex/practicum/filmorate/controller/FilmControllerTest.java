@@ -247,16 +247,6 @@ public class FilmControllerTest {
     }
 
     @Test
-    public void shouldThrowExceptionForAlreadyAddedLike() {
-        addDefaultFilm();
-        addDefaultUser();
-        restTemplate.put(getActualURI() + "/1/like/1", new HttpEntity<>(null));
-        HttpStatus statusCode = addLikeDefault().getStatusCode();
-
-        assertEquals(HttpStatus.CONFLICT, statusCode);
-    }
-
-    @Test
     public void shouldThrowExceptionForAddingLikeFromNotFoundUser() {
         addDefaultFilm();
         HttpStatus statusCode = addLikeDefault().getStatusCode();

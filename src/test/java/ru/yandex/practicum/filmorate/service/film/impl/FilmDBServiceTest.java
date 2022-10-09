@@ -8,13 +8,12 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
-import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
+import ru.yandex.practicum.filmorate.dao.user.UserDAO;
 import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.dao.user.UserDAO;
 import ru.yandex.practicum.filmorate.service.film.SortType;
 
 import java.time.LocalDate;
@@ -45,13 +44,6 @@ public class FilmDBServiceTest {
 
         service.addLike(1, 1);
         assertEquals(1, service.getFilm(1).getRate());
-    }
-
-    @Test
-    public void shouldThrowExceptionForAlreadyAddedLike() {
-        addUserAndFilm();
-        service.addLike(1, 1);
-        assertThrows(LikeAlreadyAddedException.class, () -> service.addLike(1, 1));
     }
 
     @Test

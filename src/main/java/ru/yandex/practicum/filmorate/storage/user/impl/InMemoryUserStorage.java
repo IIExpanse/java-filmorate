@@ -61,6 +61,11 @@ public class InMemoryUserStorage implements UserStorage {
         user.removeFriend(friendId);
     }
 
+    @Override
+    public void removeUser(int id) {
+        usersMap.remove(id);
+    }
+
     private int generateNewId() {
         return idCounter++;
     }

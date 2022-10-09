@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import ru.yandex.practicum.filmorate.exception.director.DirectorAlreadyAddedException;
+import ru.yandex.practicum.filmorate.exception.director.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
 import ru.yandex.practicum.filmorate.exception.friend.FriendAlreadyAddedException;
@@ -32,7 +34,9 @@ public class GlobalExceptionHandler {
             GenreNotFoundException.class,
             MPANotFoundException.class,
             ReviewNotFoundException.class,
-            ReviewObjectNotFoundException.class
+            ReviewObjectNotFoundException.class,
+            MPANotFoundException.class,
+            DirectorNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFoundExceptions(final RuntimeException e) {
         String exceptionName = e.getClass().getName();
@@ -48,6 +52,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             FriendAlreadyAddedException.class,
             LikeAlreadyAddedException.class,
+            DirectorAlreadyAddedException.class,
             CantAddSelfException.class,
             DataIntegrityViolationException.class,
             ReviewAlreadyLikedException.class

@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -18,7 +17,6 @@ import ru.yandex.practicum.filmorate.dao.genre.GenreDAO;
 import ru.yandex.practicum.filmorate.dao.mpa.MpaDAO;
 import ru.yandex.practicum.filmorate.exception.director.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
@@ -176,15 +174,9 @@ public class FilmDAO implements FilmStorage {
         }
 
         try {
-            template.update("INSERT INTO \"likes\" (\"film_id\", \"from_user_id\") " +
+            template.update("MERGE INTO \"likes\" (\"film_id\", \"from_user_id\") " +
                     "VALUES (?, ?)", targetFilmId, userId);
             feed.addLikeEvent(userId, targetFilmId);
-
-        } catch (DuplicateKeyException e) {
-            feed.addLikeEvent(userId, targetFilmId);
-            throw new LikeAlreadyAddedException(
-                    String.format("Ошибка при добавлении лайка для фильма с id=%d " +
-                            "от пользователя с id=%d: лайк уже добавлен.", userId, targetFilmId));
 
         } catch (DataIntegrityViolationException e) {
             throw new UserNotFoundException(

@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
 import ru.yandex.practicum.filmorate.exception.friend.CantRemoveSelfException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
@@ -48,6 +49,11 @@ public class UserController {
     @GetMapping("/{id}/friends/common/{otherId}")
     public ResponseEntity<Collection<User>> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
         return ResponseEntity.ok(service.getCommonFriends(id, otherId));
+    }
+
+    @GetMapping("/{id}/feed")
+    public ResponseEntity<Collection<Feed>> getUserFeed(@PathVariable int id) {
+        return ResponseEntity.ok(service.getUserFeed(id));
     }
 
     @PostMapping

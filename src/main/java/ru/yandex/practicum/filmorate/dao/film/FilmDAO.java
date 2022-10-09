@@ -13,6 +13,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.director.DirectorDAO;
+import ru.yandex.practicum.filmorate.dao.feed.FeedDAO;
 import ru.yandex.practicum.filmorate.dao.genre.GenreDAO;
 import ru.yandex.practicum.filmorate.dao.mpa.MpaDAO;
 import ru.yandex.practicum.filmorate.exception.director.DirectorNotFoundException;
@@ -40,6 +41,7 @@ public class FilmDAO implements FilmStorage {
     private final GenreDAO genreDAO;
     private final MpaDAO mpaDAO;
     private final DirectorDAO directorDAO;
+    private final FeedDAO feed;
 
     @Override
     public Film getFilm(int id) {
@@ -157,7 +159,10 @@ public class FilmDAO implements FilmStorage {
         try {
             template.update("INSERT INTO \"likes\" (\"film_id\", \"from_user_id\") " +
                     "VALUES (?, ?)", targetFilmId, userId);
+            feed.addLikeEvent(userId, targetFilmId);
+
         } catch (DuplicateKeyException e) {
+            feed.addLikeEvent(userId, targetFilmId);
             throw new LikeAlreadyAddedException(
                     String.format("Ошибка при добавлении лайка для фильма с id=%d " +
                             "от пользователя с id=%d: лайк уже добавлен.", userId, targetFilmId));
@@ -237,6 +242,7 @@ public class FilmDAO implements FilmStorage {
 
         template.update("DELETE FROM \"likes\" WHERE \"film_id\" = ? AND \"from_user_id\" = ?",
                 targetFilmId, userId);
+        feed.removeLikeEvent(userId, targetFilmId);
     }
 
     @Override
@@ -251,8 +257,7 @@ public class FilmDAO implements FilmStorage {
                 " and \"film_id\" not IN (select \"film_id\" from \"likes\"" +
                         " where \"from_user_id\"= ?)))";
 
-        List<Film> films = template.query(sqlQuery, new FilmMapper(), userId, userId, userId);
-        return films;
+        return template.query(sqlQuery, new FilmMapper(), userId, userId, userId);
     }
 
     @Override

@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 @RequiredArgsConstructor
 @Getter
 @Setter
-public class UserLikedReview {
+public class UserReviewReact {
     @NotNull(message = "ID пользователя, поставившего лайк отзыву, должно быть не 'null'.")
     private final Integer userId;
     @NotNull(message = "Оценка отзыва должна быть не 'null'.")

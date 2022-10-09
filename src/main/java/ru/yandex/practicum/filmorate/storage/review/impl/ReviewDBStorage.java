@@ -10,9 +10,9 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.review.ReviewNotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.model.UserLikedReview;
+import ru.yandex.practicum.filmorate.model.UserReviewReact;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
-import ru.yandex.practicum.filmorate.storage.userreview.UserLikeReviewStorage;
+import ru.yandex.practicum.filmorate.storage.userreview.UserReviewReactStorage;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,14 +24,25 @@ import java.util.Objects;
 @Repository("ReviewDBStorage")
 public class ReviewDBStorage implements ReviewStorage {
     
-    JdbcTemplate jdbcTemplate;
-    UserLikeReviewStorage userLikedReviewStorage;
+    private final JdbcTemplate jdbcTemplate;
+    private final UserReviewReactStorage userLikedReviewStorage;
     
     @Autowired
     public ReviewDBStorage(JdbcTemplate jdbcTemplate,
-                           @Qualifier("UserLikeReviewDBStorage") UserLikeReviewStorage userLikedReviewStorage) {
+                           @Qualifier("UserLikeReviewDBStorage") UserReviewReactStorage userLikedReviewStorage) {
         this.jdbcTemplate = jdbcTemplate;
         this.userLikedReviewStorage = userLikedReviewStorage;
+    }
+    
+    /**
+     * Получить все отзывы. Просто так. То есть без сортировки.
+     */
+    @Override
+    public List<Review> getAllReviews() {
+        String sql = "select * from REVIEWS";
+        List<Review> result = jdbcTemplate.query(sql, new ReviewMapper());
+        log.info("Выполнен запрос по отправке всех отзывов обо всех фильмах.");
+        return result;
     }
     
     /**
@@ -46,7 +57,7 @@ public class ReviewDBStorage implements ReviewStorage {
                 "VALUES (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(con -> {
-            PreparedStatement stmt = con.prepareStatement(sqlQuery, new String[]{"reviews_id"});
+            PreparedStatement stmt = con.prepareStatement(sqlQuery, new String[]{"review_id"});
             stmt.setInt(1, review.getFilmId());
             stmt.setInt(2, review.getUserId());
             stmt.setBoolean(3, review.getIsPositive());
@@ -54,13 +65,14 @@ public class ReviewDBStorage implements ReviewStorage {
             return stmt;
         }, keyHolder);
         //отзыву, записанному в БД, присваиваем ID из БД.
-        review.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
+        review.setReviewId(Objects.requireNonNull(keyHolder.getKey()).intValue());
         
         return review;
     }
     
     /**
-     * Обновление информации о существующем отзыве о фильме.
+     * Обновление информации о существующем отзыве о отзыве.
+     * <p>Внимание в данном методе обновляется только контекст и оценка в отзыве пользователем.</p>
      *
      * @param review обновляемый отзыв.
      * @return обновляемый отзыв.
@@ -68,14 +80,15 @@ public class ReviewDBStorage implements ReviewStorage {
     @Override
     public Review updateInStorage(Review review) {
         String sqlQuery = "update REVIEWS " +
-                "SET REVIEW_ID = ?, FILM_ID = ?, USER_ID = ?, IS_POSITIVE = ?, CONTENT = ? WHERE REVIEW_ID = ?";
+                "SET IS_POSITIVE = ?, CONTENT = ? WHERE REVIEW_ID = ?";
+        //"SET REVIEW_ID = ?, FILM_ID = ?, USER_ID = ?, IS_POSITIVE = ?, CONTENT = ? WHERE REVIEW_ID = ?";
         jdbcTemplate.update(sqlQuery,
-                review.getId(),
-                review.getFilmId(),
-                review.getUserId(),
+                //review.getReviewId(),
+                //review.getFilmId(),
+                //review.getUserId(),
                 review.getIsPositive(),
                 review.getContent(),
-                review.getId()
+                review.getReviewId()
         );
         return review;
     }
@@ -97,7 +110,7 @@ public class ReviewDBStorage implements ReviewStorage {
             throw new ReviewNotFoundException(error);
         }
         //Считываем лайки пользователей этому отзыву.
-        List<UserLikedReview> userLikeReviewDBStorages =
+        List<UserReviewReact> userLikeReviewDBStorages =
                 userLikedReviewStorage.getUserLikeReviewsByReviewId(reviewId);
         //Рассчитываем "полезность" отзыва и присваиваем отзыву.
         review.setUseful(getUsefulnessOfTheReview(userLikeReviewDBStorages));
@@ -106,48 +119,55 @@ public class ReviewDBStorage implements ReviewStorage {
     }
     
     /**
-     * Получить популярные отзывы из БД в количестве count штук.
+     * Получить популярные отзывы всех фильмов из БД в количестве count штук.
+     * <p>А ещё и отсортированные по популярности.</p>
      *
      * @param count количество.
      */
     @Override
     public List<Review> getPopularReviewsWithCount(Integer count) {
-    
+        ///////////////////////////////////////////////////////////////////////////
+        // TODO: 2022.10.09 04:05:20 Сделать метод получения популярных отзывов. Отсортированных по популярности.
+        //  - @Dmitriy_Gaju
+        ///////////////////////////////////////////////////////////////////////////
         String sql = "select R.*, NVL(SUM(VALUE_LIKE), 0) AS VALUE_LIKE FROM REVIEWS AS R " +
                 "LEFT JOIN REVIEW_LIKE_DISLIKE AS RLD ON R.REVIEW_ID = RLD.REVIEW_ID " +
                 "left join like_value as LV ON RLD.IS_LIKE = LV.is_like " +
                 "group by R.REVIEW_ID order by COUNT(RLD.USER_ID) desc limit ?";
-        
-        
+
+
 //                String sql = "select R.* FROM REVIEWS AS R " +
 //                "LEFT JOIN REVIEW_LIKE_DISLIKE AS RLD ON R.REVIEW_ID = RLD.REVIEW_ID " +
 //                " group by R.FILM_ID order by COUNT(RLD.user_id) desc limit ?";
-    
+        
         return jdbcTemplate.query(sql, new ReviewMapper(), count);
     }
     
     /**
-     * Получить популярные отзывы из БД в количестве count штук.
+     * Получить популярные отзывы одного фильма из БД в количестве count штук.
      *
      * @param filmId ID фильма.
      * @param count  количество.
      * @return список отзывов.
      */
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: 2022.10.08 23:13:34 Не работает. Надо сделать. - @Dmitriy_Gaju
+    ///////////////////////////////////////////////////////////////////////////
     @Override
     public List<Review> getPopularReviewsWithCountAndFilmId(Integer filmId, Integer count) {
-        String sql =  "SELECT R.*, NVL(SUM(value_like), 0) AS value_like " +
-                "FROM REVIEWS AS R " +
-                "LEFT JOIN REVIEW_LIKE_DISLIKE AS R ON R.REVIEW_ID = R.REVIEW_ID " +
-                "LEFT JOIN REVIEW_LIKE_DISLIKE AS RLD ON R.REVIEW_ID = RLD.REVIEW_ID " +
-                "WHERE FILM_ID = ? GROUP BY R.REVIEW_ID ORDER BY value_like DESC LIMIT ?";
-        
-        String sqlQuery =  "SELECT R.*, NVL(SUM(VALUE_LIKE), 0) AS MARK " +
-                "FROM REVIEWS AS R " +
-                "LEFT JOIN REVIEW_LIKE_DISLIKE AS RLD ON R.REVIEW_ID = RLD.REVIEW_ID " +
-                "LEFT JOIN LIKE_VALUE AS  LV ON RLD.REVIEW_ID = LV.VALUE_LIKE " +
-                "WHERE FILM_ID = ? GROUP BY R.REVIEW_ID ORDER BY MARK DESC LIMIT ?";
-        jdbcTemplate.query(sqlQuery, new ReviewMapper(), filmId, count);
-        jdbcTemplate.query(sql, new ReviewMapper(), filmId, count);
+//        String sql =  "SELECT R.*, NVL(SUM(value_like), 0) AS value_like " +
+//                "FROM REVIEWS AS R " +
+//                "LEFT JOIN REVIEW_LIKE_DISLIKE AS R ON R.REVIEW_ID = R.REVIEW_ID " +
+//                "LEFT JOIN REVIEW_LIKE_DISLIKE AS RLD ON R.REVIEW_ID = RLD.REVIEW_ID " +
+//                "WHERE FILM_ID = ? GROUP BY R.REVIEW_ID ORDER BY value_like DESC LIMIT ?";
+//
+//        String sqlQuery =  "SELECT R.*, NVL(SUM(VALUE_LIKE), 0) AS MARK " +
+//                "FROM REVIEWS AS R " +
+//                "LEFT JOIN REVIEW_LIKE_DISLIKE AS RLD ON R.REVIEW_ID = RLD.REVIEW_ID " +
+//                "LEFT JOIN LIKE_VALUE AS  LV ON RLD.REVIEW_ID = LV.VALUE_LIKE " +
+//                "WHERE FILM_ID = ? GROUP BY R.REVIEW_ID ORDER BY MARK DESC LIMIT ?";
+//        jdbcTemplate.query(sqlQuery, new ReviewMapper(), filmId, count);
+//        jdbcTemplate.query(sql, new ReviewMapper(), filmId, count);
         return null;
     }
     
@@ -163,34 +183,14 @@ public class ReviewDBStorage implements ReviewStorage {
         List<Review> result = jdbcTemplate.query(sqlQuery, new ReviewMapper(), filmId);
         //Проходим по циклу и присваиваем каждому отзыву его "правильность".
         for (Review r : result) {
-            Integer reviewId = r.getId();
-            List<UserLikedReview> userLikedReviews = userLikedReviewStorage.getUserLikeReviewsByReviewId(reviewId);
+            Integer reviewId = r.getReviewId();
+            List<UserReviewReact> userLikedReviews = userLikedReviewStorage.getUserLikeReviewsByReviewId(reviewId);
             r.setUseful(getUsefulnessOfTheReview(userLikedReviews));
         }
         log.debug("Получен список отзывов фильма с ID = {}\t—\t{}", filmId, result);
         return result;
     }
     
-    /**
-     * Удалить лайк отзыву.
-     */
-    @Override
-    public void removeLikeForReview(Integer reviewId, Integer userId) {
-        String sql = "DELETE FROM REVIEW_LIKE_DISLIKE " +
-                "WHERE REVIEW_ID = ? AND USER_ID = ?";
-        jdbcTemplate.update(sql, reviewId, userId);
-    }
-    
-    
-    /**
-     * Удалить дизлайк отзыву.
-     */
-    @Override
-    public void removeDisLikeForReview(Integer reviewId, Integer userId) {
-        String sql = "DELETE FROM REVIEW_LIKE_DISLIKE " +
-                "WHERE REVIEW_ID = ? AND USER_ID = ?";
-                jdbcTemplate.update(sql);
-    }
     /**
      * Получить список отзывов о фильмах пользователя с ID.
      *
@@ -220,31 +220,12 @@ public class ReviewDBStorage implements ReviewStorage {
         
     }
     
-    /**
-     * Поставить лайк/дизлайк отзыву с reviewId пользователем userId.
-     *
-     * @param reviewId ID отзыва.
-     * @param userId   ID пользователя.
-     * @param isLike   True - лайк, False - дизлайк.
-     */
-    @Override
-    public void setLikeForReview(Integer reviewId, Integer userId, Boolean isLike) {
-        String sqlQueryForDelete = "DELETE FROM REVIEW_LIKE_DISLIKE WHERE REVIEW_ID = ? AND USER_ID = ?";
-        jdbcTemplate.update(sqlQueryForDelete, reviewId, userId);
-        String sqlQueryForAddLike = "MERGE INTO REVIEW_LIKE_DISLIKE (review_id, user_id, is_like)" +
-                "VALUES (?, ?, ?)";
-        jdbcTemplate.update(sqlQueryForAddLike, reviewId, userId, isLike);
-        if (isLike) {
-            log.info("Установлен лайк отзыву с ID = {} пользователем с ID = {}.", reviewId, userId);
-        } else {
-            log.info("Установлен дизлайк отзыву с ID = {} пользователем с ID = {}.", reviewId, userId);
-        }
-    }
     
     /**
      * Проверить наличие отзыва по его reviewId.
      *
      * @param reviewId ID отзыва.
+     * @return True — запись в БД есть и она одна. False — записи нет или их более одной.
      */
     public boolean existReviewById(Integer reviewId) {
         log.debug("Вызван метод проверки наличия в БД отзыва с ID = {}.", reviewId);
@@ -257,10 +238,13 @@ public class ReviewDBStorage implements ReviewStorage {
     private static class ReviewMapper implements RowMapper<Review> {
         @Override
         public Review mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new Review(rs.getString("content"),
+//            Review result = new Review();
+            return new Review(rs.getInt("review_id"),
+                    rs.getString("content"),
                     rs.getBoolean("is_positive"),
                     rs.getInt("film_id"),
-                    rs.getInt("user_id"));
+                    rs.getInt("user_id"),
+                    0);
         }
     }
     
@@ -271,9 +255,9 @@ public class ReviewDBStorage implements ReviewStorage {
      * @return "полезность" отзыва, судя по реакциям пользователей на него.
      */
     @Override
-    public Integer getUsefulnessOfTheReview(List<UserLikedReview> userLikedReviews) {
+    public Integer getUsefulnessOfTheReview(List<UserReviewReact> userLikedReviews) {
         Integer count = 0;
-        for (UserLikedReview uLR : userLikedReviews) {
+        for (UserReviewReact uLR : userLikedReviews) {
             if (uLR.getIsLike()) {
                 count++;
             } else {

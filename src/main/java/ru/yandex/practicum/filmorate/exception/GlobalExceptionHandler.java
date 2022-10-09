@@ -17,6 +17,7 @@ import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.exception.mpa.MPANotFoundException;
 import ru.yandex.practicum.filmorate.exception.review.ReviewNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.userreviewreact.UserReviewReactNotFoundException;
 
 @ControllerAdvice
 @Slf4j
@@ -29,7 +30,8 @@ public class GlobalExceptionHandler {
             UserNotFoundException.class,
             GenreNotFoundException.class,
             MPANotFoundException.class,
-            ReviewNotFoundException.class
+            ReviewNotFoundException.class,
+            UserReviewReactNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFoundExceptions(final RuntimeException e) {
         String exceptionName = e.getClass().getName();

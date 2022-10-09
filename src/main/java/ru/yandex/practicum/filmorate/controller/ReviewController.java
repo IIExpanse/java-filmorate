@@ -4,11 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.review.ReviewNotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 import ru.yandex.practicum.filmorate.service.review.ReviewService;
 import ru.yandex.practicum.filmorate.service.user.UserService;
@@ -32,13 +28,21 @@ public class ReviewController {
     }
     
     /**
+     * Получить все отзывы.
+     */
+    @GetMapping
+    public ResponseEntity<?> getAllReviews() {
+        return ResponseEntity.ok(reviewService.getAllReviews());
+    }
+    
+    /**
      * Добавление нового отзыва.
      *
      * @param review добавляемый отзыв.
      */
     @PostMapping
-    public ResponseEntity<?> createReview(@RequestBody Review review) {
-        return ResponseEntity.ok(reviewService.addReview(review));
+    public Review createReview(@RequestBody Review review) {
+        return reviewService.addReview(review);
     }
     
     /**
@@ -50,6 +54,7 @@ public class ReviewController {
     }
     
     /**
+     * DELETE /reviews/{id}
      * Удалить отзыв из БД.
      */
     @DeleteMapping("/{id}")
@@ -81,67 +86,44 @@ public class ReviewController {
     
     /**
      * PUT /reviews/{id}/like/{userId}  — пользователь ставит лайк отзыву.
-     *
      */
     @PutMapping("{id}/dislike/{userId}")
     public void setDisLikeForReview(@PathVariable Integer id, @PathVariable Integer userId) {
-        if (reviewService.getReviewById(id) == null) {
-            throw new ReviewNotFoundException("Error 404. В методе установки дизлайка отзыву о фильме ошибка.");
-        }
-        reviewService.setLikeForReview(id, userId, false);
+        reviewService.setReactForReview(id, userId, false);
     }
     
     /**
-     * PUT /reviews/{id}/like/{userId}  — пользователь ставит лайк отзыву.
-     *
+     * PUT /reviews/{id}/like/{userId}  —
+     * <p>пользователь ставит лайк отзыву.</p>
      */
     @PutMapping("{id}/like/{userId}")
     public void setLikeForReview(@PathVariable Integer id, @PathVariable Integer userId) {
-        if (reviewService.getReviewById(id) == null) {
-            throw new ReviewNotFoundException("Error 404. В методе установки дизлайка отзыву о фильме ошибка.");
-        }
-        reviewService.setLikeForReview(id, userId, true);
+        reviewService.setReactForReview(id, userId, true);
     }
     
     /**
      * - `DELETE /reviews/{id}/like/{userId}`  — пользователь удаляет лайк/дизлайк отзыву.
-     * - `DELETE /reviews/{id}/dislike/{userId}`  — пользователь удаляет дизлайк отзыву.
      */
     @DeleteMapping("/{id}/like/{userId}")
     public void removeLike(@PathVariable Integer id, @PathVariable Integer userId) {
-        reviewService.removeReviewById();
+        reviewService.removeReactForReview(id, userId);
     }
+    
     /**
-     * - `DELETE /reviews/{id}/like/{userId}`  — пользователь удаляет лайк/дизлайк отзыву.
      * - `DELETE /reviews/{id}/dislike/{userId}`  — пользователь удаляет дизлайк отзыву.
      */
-    
-    /**
-     * Посмотреть все отзывы о фильме.
-     *
-     * @param filmId ID фильма.
-     */
-    public List<Review> getReviewsByFilmId(Integer filmId) {
-        return reviewService.getReviewsByFilmId(filmId);
+    @DeleteMapping("/{id}/dislike/{userId}")
+    public void removeDisLike(@PathVariable Integer id, @PathVariable Integer userId) {
+        reviewService.removeReactForReview(id, userId);
     }
     
-    /**
-     * Посмотреть отзыв о фильме определённого пользователя.
-     *
-     * @param filmId ID фильма.
-     * @param userid ID пользователя.
-     * @return
-     */
-    public ResponseEntity<?> getReviewByFilmIdAndUserId(Integer filmId, Integer userid) {
-        //reviewService.g()
-        return null;
-    }
     
     /**
      * Посмотреть все отзывы пользователя.
+     * <p>Этот метод лишний.</p>
      *
      * @param userId ID пользователя.
-     * @return
+     * @return отзывы пользователя о разных фильмах
      */
     public ResponseEntity<?> getReviewsByUserId(Integer userId) {
         return null;

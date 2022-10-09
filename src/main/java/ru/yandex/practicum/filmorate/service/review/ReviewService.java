@@ -7,7 +7,13 @@ import java.util.List;
 public interface ReviewService {
     
     /**
+     * Получить все отзывы.
+     */
+    List<Review> getAllReviews();
+    
+    /**
      * Добавление нового отзыва.
+     *
      * @param review добавляемый отзыв.
      */
     Review addReview(Review review);
@@ -18,7 +24,7 @@ public interface ReviewService {
      * @param review обновляемый отзыв.
      * @return обновлённый отзыв.
      */
-    public Review updateInStorage(Review review);
+    Review updateInStorage(Review review);
     
     /**
      * Получить отзыв по review_id
@@ -30,10 +36,11 @@ public interface ReviewService {
     /**
      * Получение всех отзывов по идентификатору фильма, если фильм не указан, то все.
      * Если кол-во не указано, то 10.
+     *
      * @param filmId ID фильма.
-     * @param count количество отзывов в отчёте.
+     * @param count  количество отзывов в отчёте.
      */
-    List<Review> getReviewsByFilmIdAnWithCount(Integer filmId, Integer count);
+    List<Review> getReviewsByFilmIdAndWithCount(Integer filmId, Integer count);
     
     /**
      * Получить список отзывов по ID фильма.
@@ -56,7 +63,13 @@ public interface ReviewService {
      */
     void removeReviewById(Integer reviewId);
     
-    void removeLikeForReview(Integer reviewId, Integer userId);
+    /**
+     * Удаление пользователем лайка/дизлайка отзыву.
+     *
+     * @param reviewId ID отзыва.
+     * @param userId   ID пользователя.
+     */
+    void removeReactForReview(Integer reviewId, Integer userId);
     
     /**
      * Поставить лайк/дизлайк отзыву с reviewId пользователем userId.
@@ -65,7 +78,7 @@ public interface ReviewService {
      * @param userId   ID пользователя.
      * @param isLike   True - лайк, False - дизлайк.
      */
-    void setLikeForReview(Integer reviewId, Integer userId, Boolean isLike);
+    void setReactForReview(Integer reviewId, Integer userId, Boolean isLike);
     
-    void removeDisLikeForReview(Integer reviewId, Integer userId);
+    //void removeDisLikeForReview(Integer reviewId, Integer userId);
 }

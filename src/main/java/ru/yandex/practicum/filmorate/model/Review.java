@@ -1,12 +1,10 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 //{
@@ -17,28 +15,30 @@ import javax.validation.constraints.NotNull;
 //}
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)           //только явным образом включённые
-@RequiredArgsConstructor
+@AllArgsConstructor
+//@NoArgsConstructor
 @Getter
 @Setter
 public class Review {
     @EqualsAndHashCode.Include                              //поле включено в EqualsHashCode
-    @NotNull(message = "ID для отзыва о фильме не должно быть пустым.")
-    private Integer id;
+//    @NotNull(message = "ID для отзыва о фильме не должно быть пустым.")
+    private Integer reviewId;
     
-    @NotBlank(message = "Отзыв о фильме не должен быть пустым.")
+    //    @NotBlank(message = "Отзыв о фильме не должен быть пустым.")
     private final String content;
     
-    @NotNull(message = "Отзыв о фильме должен быть положительным или отрицательным. Поле 'isPositive' = null.")
+    @NotNull//(message = "Отзыв о фильме должен быть положительным или отрицательным. Поле 'isPositive' = null.")
     private final Boolean isPositive;
     
-    @NotNull(message = "В отзыве ID фильма не должно быть пустым.")
+    @NotNull//(message = "В отзыве ID фильма не должно быть пустым.")
     private final Integer filmId;
     
-    @NotNull(message = "В отзыве ID пользователя, написавшего отзыв, не должно быть пустым.")
+    @NotNull//(message = "В отзыве ID пользователя, написавшего отзыв, не должно быть пустым.")
     private final Integer userId;
     
     /**
      * Карта оценок отзыва пользователями.
      */
+    @NotNull(message = "Значение по умолчанию для полезности отзыва = 0.")
     private Integer useful;
 }

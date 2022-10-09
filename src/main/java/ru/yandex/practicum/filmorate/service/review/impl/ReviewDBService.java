@@ -28,17 +28,18 @@ public class ReviewDBService implements ReviewService {
 
     @Override
     public Collection<Review> getAllReviews() {
-        return reviewDAO.getAllReviews();
+        return reviewDAO.getAllReviews().stream()
+                .sorted(Comparator.comparing(Review::getUseful).reversed())
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<Review> getFilmReviewsSortedByUsefulness(int filmId, int count) {
-        Collection<Review> list = reviewDAO.getReviewsByFilmId(filmId);
         if (count == 0) {
-            count = list.size();
+            count = Integer.MAX_VALUE;
         }
 
-        return list.stream()
+        return reviewDAO.getReviewsByFilmId(filmId).stream()
                 .sorted(Comparator.comparing(Review::getUseful).reversed())
                 .limit(count)
                 .collect(Collectors.toList());

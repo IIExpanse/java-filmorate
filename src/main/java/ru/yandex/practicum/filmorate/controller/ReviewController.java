@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -31,13 +30,11 @@ public class ReviewController {
     }
 
     @GetMapping
-    public ResponseEntity<Collection<Review>> getAllReviews() {
-        return ResponseEntity.ok(reviewService.getAllReviews());
-    }
-
-    @GetMapping
-    public ResponseEntity<Collection<Review>> getAllReviews(@RequestParam int filmId,
-                                                            @RequestParam @DefaultValue("0") int count) {
+    public ResponseEntity<Collection<Review>> getAllReviews(@RequestParam(required = false) Integer filmId,
+                                                            @RequestParam(defaultValue = "0") int count) {
+        if (filmId == null) {
+            return ResponseEntity.ok(reviewService.getAllReviews());
+        }
         return ResponseEntity.ok(reviewService.getFilmReviewsSortedByUsefulness(filmId, count));
     }
 

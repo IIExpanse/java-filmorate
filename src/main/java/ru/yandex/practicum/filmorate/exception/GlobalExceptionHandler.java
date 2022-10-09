@@ -15,7 +15,9 @@ import ru.yandex.practicum.filmorate.exception.genre.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.exception.mpa.MPANotFoundException;
+import ru.yandex.practicum.filmorate.exception.review.ReviewAlreadyLikedException;
 import ru.yandex.practicum.filmorate.exception.review.ReviewNotFoundException;
+import ru.yandex.practicum.filmorate.exception.review.ReviewObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 
 @ControllerAdvice
@@ -30,6 +32,7 @@ public class GlobalExceptionHandler {
             GenreNotFoundException.class,
             MPANotFoundException.class,
             ReviewNotFoundException.class,
+            ReviewObjectNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFoundExceptions(final RuntimeException e) {
         String exceptionName = e.getClass().getName();
@@ -46,7 +49,8 @@ public class GlobalExceptionHandler {
             FriendAlreadyAddedException.class,
             LikeAlreadyAddedException.class,
             CantAddSelfException.class,
-            DataIntegrityViolationException.class
+            DataIntegrityViolationException.class,
+            ReviewAlreadyLikedException.class
     })
     public ResponseEntity<ErrorResponse> handleAlreadyAddedExceptions(final RuntimeException e) {
         String exceptionName = e.getClass().getName();

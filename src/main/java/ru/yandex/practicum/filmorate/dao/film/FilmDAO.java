@@ -23,6 +23,7 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.service.film.SearchBy;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.sql.*;
@@ -129,7 +130,7 @@ public class FilmDAO implements FilmStorage {
     }
 
     @Override
-    public int addFilm(Film film) {
+    public Film addFilm(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         Number id;
 
@@ -162,7 +163,7 @@ public class FilmDAO implements FilmStorage {
                 film.getDirectors().stream()
                         .map(Director::getId)
                         .collect(Collectors.toList()));
-        return id.intValue();
+        return getFilm(id.intValue());
     }
 
     @Override
@@ -190,7 +191,7 @@ public class FilmDAO implements FilmStorage {
     }
 
     @Override
-    public void updateFilm(Film film, int id) {
+    public Film updateFilm(Film film, int id) {
         Integer responseId = getIdFromDB(id);
 
         if (responseId == null) {
@@ -220,6 +221,7 @@ public class FilmDAO implements FilmStorage {
                 film.getDirectors().stream()
                         .map(Director::getId)
                         .collect(Collectors.toList()));
+        return getFilm(film.getId());
     }
 
     @Override
@@ -228,8 +230,8 @@ public class FilmDAO implements FilmStorage {
     }
 
     @Override
-    public void updateDirector(Director director) {
-        directorDAO.updateDirector(director);
+    public Director updateDirector(Director director) {
+        return directorDAO.updateDirector(director);
     }
 
     @Override
@@ -282,16 +284,21 @@ public class FilmDAO implements FilmStorage {
         template.update("DELETE FROM \"films\" WHERE \"film_id\" = ? ", id);
     }
 
-    public Collection<Film> searchFilms(String query, String by) {
+    public Collection<Film> searchFilms(String query, SearchBy searchBy) {
         String director = null;
         String title = null;
-        if (by.contains("director")) {
+
+        if (searchBy == SearchBy.DIRECTOR) {
             director = "'%" + query.toLowerCase() + "%'";
-        }
-        if (by.contains("title")) {
+
+        } else if (searchBy == SearchBy.TITLE) {
             title = "'%" + query.toLowerCase() + "%'";
+
+        } else {
+            director = "'%" + query.toLowerCase() + "%'";
+            title = director;
         }
-        //String forSearchByTitle = "'%" + query.toLowerCase() + "%'";
+
         return template.query("SELECT * FROM \"films\" f " +
                 "LEFT JOIN \"mpa_rating\" mr ON f.\"mpa_id\" = mr.\"mpa_id\" " +
                 "LEFT JOIN \"film_directors\" fd ON f.\"film_id\" = fd.\"film_id\" " +

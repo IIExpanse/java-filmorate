@@ -26,7 +26,7 @@ public class UserController {
     private final UserService service;
     private final FilmService filmService;
 
-    public UserController(@Qualifier("UserDBService") UserService service, @Qualifier("FilmDBService") FilmService filmService) {
+    public UserController(@Qualifier("UserDBService") UserService service, FilmService filmService) {
         this.service = service;
         this.filmService = filmService;
     }
@@ -59,18 +59,17 @@ public class UserController {
     @PostMapping
     public ResponseEntity<User> addNewUser(@Valid @RequestBody User user) {
         checkName(user);
-        int id = service.addUser(user);
-        user.setId(id);
+        user = service.addUser(user);
+
         log.debug("Добавлен новый пользователь: {}", user);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 
     @PutMapping
     public ResponseEntity<User> updateUser(@Valid @RequestBody User user) {
-        int id = user.getId();
-
         checkName(user);
-        service.updateUser(user, id);
+        user = service.updateUser(user, user.getId());
+
         log.debug("Обновлена информация о пользователе: {}", user);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }

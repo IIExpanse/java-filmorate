@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.service.review.impl;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.review.ReviewDAO;
@@ -13,13 +13,10 @@ import java.util.stream.Collectors;
 
 @Service("ReviewDBService")
 @Primary
+@AllArgsConstructor
 public class ReviewDBService implements ReviewService {
     
     private final ReviewDAO reviewDAO;
-
-    public ReviewDBService(@Qualifier("ReviewDAO") ReviewDAO reviewDAO) {
-        this.reviewDAO = reviewDAO;
-    }
 
     @Override
     public Review getReviewById(int reviewId) {

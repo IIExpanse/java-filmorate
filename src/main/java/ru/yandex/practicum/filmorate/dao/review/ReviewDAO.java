@@ -80,7 +80,7 @@ public class ReviewDAO {
         } else throw new RuntimeException("Ошибка: отзыв не был добавлен.");
 
         feed.addReviewEvent(review.getUserId(), num.intValue());
-        return review;
+        return getReviewById(num.intValue());
     }
 
     public void addValueToReview(int reviewId, int userId, boolean isLike) {
@@ -120,7 +120,7 @@ public class ReviewDAO {
             throw new RuntimeException("Ошибка при обновлении отзыва.");
         }
         feed.updateReviewEvent(existingReview.getUserId(), existingReview.getFilmId());
-        return review;
+        return getReviewById(review.getReviewId());
     }
 
     public void removeReview(int reviewId) {

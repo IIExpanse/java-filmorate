@@ -32,15 +32,15 @@ public interface FilmService {
 
     Collection<Film> getCommonFilms(int firstUserId, int secondUserId);
 
-    int addFilm(Film film);
+    Film addFilm(Film film);
 
     void addLike(int targetFilmId, int userId);
 
     Director addDirector(Director director);
 
-    void updateFilm(Film film, int id);
+    Film updateFilm(Film film, int id);
 
-    void updateDirector(Director director);
+    Director updateDirector(Director director);
 
     void removeLike(int targetFilmId, int userId);
 
@@ -48,7 +48,7 @@ public interface FilmService {
 
     void removeFilm(int id);
 
-    Collection<Film> searchFilms(String query, String by);
+    Collection<Film> searchFilms(String query, SearchBy searchBy);
 
     Collection<Film> getFilmRecommendation(int userId);
 }

@@ -68,8 +68,7 @@ public class DirectorDAO {
         if (id == null) {
             throw new RuntimeException("Ошибка: режиссер не был добавлен.");
         }
-        director.setId(id.intValue());
-        return director;
+        return getDirector(id.intValue());
     }
 
     public void pairFilmsWithDirectors(int filmId, List<Integer> directorsIds) {
@@ -83,7 +82,7 @@ public class DirectorDAO {
                 "VALUES (?, ?)", list);
     }
 
-    public void updateDirector(Director director) {
+    public Director updateDirector(Director director) {
         int id = director.getId();
 
         int affected = template.update("UPDATE \"directors\" SET \"director_name\" = ? WHERE \"director_id\" = ?",
@@ -92,6 +91,7 @@ public class DirectorDAO {
         if (affected == 0) {
             throw new DirectorNotFoundException(String.format("Ошибка при обновлении: режиссер с id=%d не найден", id));
         }
+        return getDirector(id);
     }
 
     public void removeDirector(int id) {

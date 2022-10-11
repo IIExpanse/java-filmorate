@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
+import ru.yandex.practicum.filmorate.service.film.SearchBy;
 import ru.yandex.practicum.filmorate.service.film.SortType;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -22,8 +23,7 @@ public class FilmDBService implements FilmService {
     protected final FilmStorage filmStorage;
     protected final UserStorage userStorage;
 
-    public FilmDBService(@Qualifier("FilmDAO") FilmStorage filmStorage,
-                         @Qualifier("UserDAO") UserStorage userStorage) {
+    public FilmDBService(FilmStorage filmStorage, @Qualifier("UserDAO") UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
     }
@@ -118,7 +118,7 @@ public class FilmDBService implements FilmService {
     }
 
     @Override
-    public int addFilm(Film film) {
+    public Film addFilm(Film film) {
         return filmStorage.addFilm(film);
     }
 
@@ -128,13 +128,13 @@ public class FilmDBService implements FilmService {
     }
 
     @Override
-    public void updateFilm(Film film, int id) {
-        filmStorage.updateFilm(film, id);
+    public Film updateFilm(Film film, int id) {
+        return filmStorage.updateFilm(film, id);
     }
 
     @Override
-    public void updateDirector(Director director) {
-        filmStorage.updateDirector(director);
+    public Director updateDirector(Director director) {
+        return filmStorage.updateDirector(director);
     }
 
     @Override
@@ -153,9 +153,9 @@ public class FilmDBService implements FilmService {
     }
 
     @Override
-    public Collection<Film> searchFilms(String query, String by) {
+    public Collection<Film> searchFilms(String query, SearchBy searchBy) {
         return List.copyOf(
-                filmStorage.searchFilms(query, by).stream()
+                filmStorage.searchFilms(query, searchBy).stream()
                         .sorted(Comparator.comparing(Film::getRate).reversed())
                         .collect(Collectors.toList()));
     }

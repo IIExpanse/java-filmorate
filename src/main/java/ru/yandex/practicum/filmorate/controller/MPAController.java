@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,13 +13,10 @@ import java.util.Collection;
 
 @RestController
 @RequestMapping("/mpa")
+@AllArgsConstructor
 public class MPAController {
 
     private final FilmService service;
-
-    public MPAController(@Qualifier("FilmDBService") FilmService service) {
-        this.service = service;
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<MPA> getMPA(@PathVariable int id) {

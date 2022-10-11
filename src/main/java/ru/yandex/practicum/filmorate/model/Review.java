@@ -13,14 +13,14 @@ import javax.validation.constraints.NotNull;
 @ToString
 public class Review {
     private int reviewId;
-    @NotBlank
-    @NotNull
+    @NotBlank(message = "Содержание отзыва не может быть пустым.")
+    @NotNull(message = "Содержание отзыва не может быть равно null.")
     private final String content;
-    @NotNull
+    @NotNull(message = "Оценка отзыва не может быть равна null.")
     private final Boolean isPositive;
-    @NotNull
+    @NotNull(message = "Id фильма не может быть равен null.")
     private final Integer filmId;
-    @NotNull
+    @NotNull(message = "Id пользователя не может быть равен null.")
     private final Integer userId;
     private int useful;
 

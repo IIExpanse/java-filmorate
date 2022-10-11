@@ -43,10 +43,9 @@ public class FilmDAOTest {
     @Test
     public void addAndGetFilmTest() {
         Film film = makeDefaultFilm();
-        assertEquals(1, filmStorage.addFilm(film));
         film.setId(1);
 
-        assertEquals(film, filmStorage.getFilm(1));
+        assertEquals(film, filmStorage.addFilm(film));
     }
 
     @Test
@@ -181,7 +180,7 @@ public class FilmDAOTest {
 
         Collection<Film> filmRecommendation = filmStorage.getFilmRecommendation(user1.getId());
         assertNotNull(filmRecommendation);
-        assertTrue(filmRecommendation.size() == 2);
+        assertEquals(2, filmRecommendation.size());
     }
 
     private Film makeDefaultFilm() {

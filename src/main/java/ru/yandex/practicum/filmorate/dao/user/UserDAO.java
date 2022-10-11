@@ -57,7 +57,7 @@ public class UserDAO implements UserStorage {
     }
 
     @Override
-    public int addUser(User user) {
+    public User addUser(User user) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         Number id;
 
@@ -74,7 +74,7 @@ public class UserDAO implements UserStorage {
 
         id = keyHolder.getKey();
         if (id != null) {
-            return id.intValue();
+            return getUser(id.intValue());
 
         } else throw new RuntimeException("Ошибка: пользователь не был добавлен.");
     }
@@ -104,7 +104,7 @@ public class UserDAO implements UserStorage {
     }
 
     @Override
-    public void updateUser(User user, int id) {
+    public User updateUser(User user, int id) {
         Integer responseId = getUserIdFromDB(id);
 
         if (responseId == null) {
@@ -119,6 +119,7 @@ public class UserDAO implements UserStorage {
                 user.getName(),
                 user.getBirthday(),
                 id);
+        return getUser(user.getId());
     }
 
     @Override

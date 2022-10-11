@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -15,14 +15,11 @@ import java.util.Collection;
 @Validated
 @RestController
 @RequestMapping("/reviews")
+@AllArgsConstructor
 @Slf4j
 public class ReviewController {
 
     private final ReviewService reviewService;
-
-    public ReviewController(@Qualifier("ReviewDBService") ReviewService reviewService) {
-        this.reviewService = reviewService;
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Review> getReviewById(@PathVariable int id) {

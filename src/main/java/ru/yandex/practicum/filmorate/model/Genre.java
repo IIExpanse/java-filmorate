@@ -14,8 +14,8 @@ import javax.validation.constraints.Positive;
 @EqualsAndHashCode
 public class Genre {
 
-    @Positive
+    @Positive(message = "Id жанра должно быть больше нуля.")
     private final int id;
-    @NotBlank
+    @NotBlank(message = "Название жанра не может быть пустым")
     private final String name;
 }

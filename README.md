@@ -1,2 +1,2 @@
 # JAVA-Filmorate
-[Схема БД](Filmorate ER-Diagram.png)
+![](Filmorate ER-Diagram.png)

@@ -5,14 +5,11 @@ import lombok.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 
+@Data
 @AllArgsConstructor
-@Getter
-@Setter
-@ToString
-@EqualsAndHashCode
 public class Director {
-    @Positive
+    @Positive(message = "Id режиссера должно быть больше нуля.")
     private int id;
-    @NotBlank
+    @NotBlank(message = "Имя режиссера не может быть пустым.")
     private final String name;
 }

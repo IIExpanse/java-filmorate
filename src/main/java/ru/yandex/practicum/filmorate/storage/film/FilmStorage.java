@@ -4,6 +4,7 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.service.film.SearchBy;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,15 +31,15 @@ public interface FilmStorage {
 
     Collection<Film> getCommonFilms(int userId, int friendId);
 
-    int addFilm(Film film);
+    Film addFilm(Film film);
 
     Director addDirector(Director director);
 
     void addLike(int targetFilmId, int userId);
 
-    void updateFilm(Film film, int id);
+    Film updateFilm(Film film, int id);
 
-    void updateDirector(Director director);
+    Director updateDirector(Director director);
 
     void removeLike(int targetFilmId, int userId);
 
@@ -46,7 +47,7 @@ public interface FilmStorage {
 
     void removeFilm(int id);
 
-    Collection<Film> searchFilms(String query, String by);
+    Collection<Film> searchFilms(String query, SearchBy searchBy);
 
     Collection<Film> getFilmRecommendation(int userId);
 }

@@ -65,7 +65,7 @@ public class InMemoryUserService implements UserService {
     }
 
     @Override
-    public int addUser(User user) {
+    public User addUser(User user) {
         return storage.addUser(user);
     }
 
@@ -77,8 +77,8 @@ public class InMemoryUserService implements UserService {
     }
 
     @Override
-    public void updateUser(User user, int id) {
-        storage.updateUser(user, id);
+    public User updateUser(User user, int id) {
+        return storage.updateUser(user, id);
     }
 
     @Override

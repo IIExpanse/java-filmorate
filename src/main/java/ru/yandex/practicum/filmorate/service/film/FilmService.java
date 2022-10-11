@@ -36,7 +36,7 @@ public interface FilmService {
 
     void addLike(int targetFilmId, int userId);
 
-    int addDirector(Director director);
+    Director addDirector(Director director);
 
     void updateFilm(Film film, int id);
 

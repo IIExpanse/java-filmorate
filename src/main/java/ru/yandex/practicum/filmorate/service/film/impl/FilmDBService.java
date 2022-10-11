@@ -123,7 +123,7 @@ public class FilmDBService implements FilmService {
     }
 
     @Override
-    public int addDirector(Director director) {
+    public Director addDirector(Director director) {
         return filmStorage.addDirector(director);
     }
 

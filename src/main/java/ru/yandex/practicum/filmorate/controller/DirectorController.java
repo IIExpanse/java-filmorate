@@ -36,17 +36,19 @@ public class DirectorController {
 
     @PostMapping
     public ResponseEntity<Director> addDirector(@Valid @RequestBody Director director) {
-        int id = service.addDirector(director);
-        director = new Director(id, director.getName());
-        log.debug("Добавлен новый режиссер: {}", director);
-
-        return new ResponseEntity<>(director, HttpStatus.CREATED);
+        ResponseEntity<Director> response = new ResponseEntity<>(service.addDirector(director), HttpStatus.CREATED);
+//        int id = service.addDirector(director);
+//        director = new Director(id, director.getName());
+        log.debug("Добавлен новый режиссер: {}", response.getBody());
+//
+//        return new ResponseEntity<>(director, HttpStatus.CREATED);
+        return response;
     }
 
     @PutMapping
     public ResponseEntity<Director> updateDirector(@Valid @RequestBody Director director) {
         service.updateDirector(director);
-        log.debug("Обновлены данные о директоре с id={}", director.getId());
+        log.debug("Обновлены данные о режиссере с id={}", director.getId());
 
         return ResponseEntity.ok(director);
     }

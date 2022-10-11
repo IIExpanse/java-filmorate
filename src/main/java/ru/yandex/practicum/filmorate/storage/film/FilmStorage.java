@@ -32,7 +32,7 @@ public interface FilmStorage {
 
     int addFilm(Film film);
 
-    int addDirector(Director director);
+    Director addDirector(Director director);
 
     void addLike(int targetFilmId, int userId);
 

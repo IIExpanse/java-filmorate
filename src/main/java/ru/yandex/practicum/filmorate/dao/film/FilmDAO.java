@@ -185,7 +185,7 @@ public class FilmDAO implements FilmStorage {
         }
     }
 
-    public int addDirector(Director director) {
+    public Director addDirector(Director director) {
         return directorDAO.addDirector(director);
     }
 

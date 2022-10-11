@@ -43,7 +43,7 @@ public class DirectorDAO {
         return template.query("SELECT * FROM \"directors\"", new DirectorMapper());
     }
 
-    public int addDirector(Director director) {
+    public Director addDirector(Director director) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         Number id;
 
@@ -68,7 +68,8 @@ public class DirectorDAO {
         if (id == null) {
             throw new RuntimeException("Ошибка: режиссер не был добавлен.");
         }
-        return id.intValue();
+        director.setId(id.intValue());
+        return director;
     }
 
     public void pairFilmsWithDirectors(int filmId, List<Integer> directorsIds) {

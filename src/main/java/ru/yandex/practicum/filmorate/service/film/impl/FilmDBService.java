@@ -154,12 +154,18 @@ public class FilmDBService implements FilmService {
 
     @Override
     public Collection<Film> searchFilms(String query, String by) {
-        return List.copyOf(
-                filmStorage.searchFilms(query, by).stream()
-                        .sorted(Comparator.comparing(Film::getRate).reversed())
-                        .collect(Collectors.toList()));
+        Collection<Film> searchedFilms;
+        if (by.contains("director") && by.contains("title")) {
+            searchedFilms = filmStorage.searchFilms(query, SortType.DIRECTOR_AND_TITLE);
+        } else if (SortType.valueOf(by.toUpperCase()) == SortType.TITLE) {
+            searchedFilms = filmStorage.searchFilms(query, SortType.TITLE);
+        } else {
+            searchedFilms = filmStorage.searchFilms(query, SortType.DIRECTOR);
+        }
+        return searchedFilms.stream()
+                .sorted(Comparator.comparing(Film::getRate).reversed())
+                .collect(Collectors.toList());
     }
-
 
     public Collection<Film> getFilmRecommendation(int userId) {
         return filmStorage.getFilmRecommendation(userId);

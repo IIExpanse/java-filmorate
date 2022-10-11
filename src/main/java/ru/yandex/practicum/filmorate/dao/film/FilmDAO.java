@@ -23,6 +23,7 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.service.film.SortType;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.sql.*;
@@ -282,16 +283,19 @@ public class FilmDAO implements FilmStorage {
         template.update("DELETE FROM \"films\" WHERE \"film_id\" = ? ", id);
     }
 
-    public Collection<Film> searchFilms(String query, String by) {
+    public Collection<Film> searchFilms(String query, SortType by) {
         String director = null;
         String title = null;
-        if (by.contains("director")) {
+        if (by == SortType.DIRECTOR) {
             director = "'%" + query.toLowerCase() + "%'";
         }
-        if (by.contains("title")) {
+        if (by == SortType.TITLE) {
             title = "'%" + query.toLowerCase() + "%'";
         }
-        //String forSearchByTitle = "'%" + query.toLowerCase() + "%'";
+        if (by == SortType.DIRECTOR_AND_TITLE) {
+            director = "'%" + query.toLowerCase() + "%'";
+            title = "'%" + query.toLowerCase() + "%'";
+        }
         return template.query("SELECT * FROM \"films\" f " +
                 "LEFT JOIN \"mpa_rating\" mr ON f.\"mpa_id\" = mr.\"mpa_id\" " +
                 "LEFT JOIN \"film_directors\" fd ON f.\"film_id\" = fd.\"film_id\" " +

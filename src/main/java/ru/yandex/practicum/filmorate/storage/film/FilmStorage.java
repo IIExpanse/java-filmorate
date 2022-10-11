@@ -4,6 +4,7 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.service.film.SortType;
 
 import java.util.Collection;
 import java.util.List;
@@ -46,7 +47,7 @@ public interface FilmStorage {
 
     void removeFilm(int id);
 
-    Collection<Film> searchFilms(String query, String by);
+    Collection<Film> searchFilms(String query, SortType by);
 
     Collection<Film> getFilmRecommendation(int userId);
 }

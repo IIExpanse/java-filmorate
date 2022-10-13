@@ -13,8 +13,8 @@ import javax.validation.constraints.Positive;
 @ToString
 @EqualsAndHashCode
 public class MPA {
-    @Positive
+    @Positive(message = "Id возрастного рейтинга должно быть больше нуля.")
     private final int id;
-    @NotBlank
+    @NotBlank(message = "Название возрастного рейтинга не может быть пустым.")
     private final String name;
 }

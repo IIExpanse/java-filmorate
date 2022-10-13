@@ -8,7 +8,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.friend.CantAddSelfException;
 import ru.yandex.practicum.filmorate.exception.friend.CantRemoveSelfException;
+import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.film.FilmService;
 import ru.yandex.practicum.filmorate.service.user.UserService;
 
 import javax.validation.Valid;
@@ -21,9 +24,11 @@ import java.util.Collection;
 public class UserController {
 
     private final UserService service;
+    private final FilmService filmService;
 
-    public UserController(@Qualifier("UserDBService") UserService service) {
+    public UserController(@Qualifier("UserDBService") UserService service, FilmService filmService) {
         this.service = service;
+        this.filmService = filmService;
     }
 
     @GetMapping("/{id}")
@@ -46,21 +51,25 @@ public class UserController {
         return ResponseEntity.ok(service.getCommonFriends(id, otherId));
     }
 
+    @GetMapping("/{id}/feed")
+    public ResponseEntity<Collection<Feed>> getUserFeed(@PathVariable int id) {
+        return ResponseEntity.ok(service.getUserFeed(id));
+    }
+
     @PostMapping
     public ResponseEntity<User> addNewUser(@Valid @RequestBody User user) {
         checkName(user);
-        int id = service.addUser(user);
-        user.setId(id);
+        user = service.addUser(user);
+
         log.debug("Добавлен новый пользователь: {}", user);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 
     @PutMapping
     public ResponseEntity<User> updateUser(@Valid @RequestBody User user) {
-        int id = user.getId();
-
         checkName(user);
-        service.updateUser(user, id);
+        user = service.updateUser(user, user.getId());
+
         log.debug("Обновлена информация о пользователе: {}", user);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
@@ -84,6 +93,17 @@ public class UserController {
         }
         service.removeFriend(id, friendId);
         log.debug("Пользователи с id={} и id={} удалены из списков друзей друг друга.", friendId, id);
+    }
+
+    @DeleteMapping("/{userId}")
+    public void removeUser(@PathVariable int userId) {
+        service.removeUser(userId);
+        log.debug("Пользователь с id={} удален.", userId);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public ResponseEntity<Collection<Film>> getFilmRecommendation(@PathVariable int id) {
+        return ResponseEntity.ok(filmService.getFilmRecommendation(id));
     }
 
     private static void checkName(User user) {

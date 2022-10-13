@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -261,6 +263,75 @@ public class UserControllerTest {
         assertEquals(List.of(user), response.getBody());
     }
 
+    @Test
+    public void removeUserTest() {
+        addDefaultUser();
+
+        HttpStatus statusCode = restTemplate.exchange(
+                getActualURI() + "/1",
+                HttpMethod.DELETE,
+                new HttpEntity<>(null),
+                User.class
+        ).getStatusCode();
+
+        assertEquals(HttpStatus.OK, statusCode);
+
+        statusCode = restTemplate.getForEntity(getActualURI() + "/1",
+                User.class
+                ).getStatusCode();
+
+        assertEquals(HttpStatus.NOT_FOUND, statusCode);
+    }
+
+    @Test
+    public void getFilmRecommendationTest() {
+        ResponseEntity<Collection<Film>> response;
+
+        Film film1 = addDefaultFilm();
+        film1.setId(1);
+        Film film2 = addDefaultFilm();
+        film2.setId(2);
+        Film film3 = addDefaultFilm();
+        film3.setId(3);
+        User user1 = addDefaultUser();
+        user1.setId(1);
+        User user2 = addDefaultUser();
+        user2.setId(2);
+
+        addLikeDefault(1, 1);
+        addLikeDefault(1, 2);
+        addLikeDefault(2, 2);
+        addLikeDefault(3, 2);
+
+        response = restTemplate.exchange(
+                getActualURI() + "/1/recommendations",
+                HttpMethod.GET,
+                new HttpEntity<>(null),
+                new ParameterizedTypeReference<>() {
+                });
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(2, response.getBody().size());
+    }
+
+    private Film makeDefaultFilm() {
+        return new Film(
+                0,
+                "nisi eiusmod",
+                "adipisicing",
+                LocalDate.parse("1967-03-25"),
+                100,
+                0,
+                new MPA(1, "G"));
+    }
+
+    private ResponseEntity<Film> addLikeDefault(int filmId, int userId) {
+        return restTemplate.exchange(
+                "http://localhost:" + port + "/films/" + filmId + "/like/"+ userId,
+                HttpMethod.PUT,
+                new HttpEntity<>(null),
+                Film.class);
+    }
+
     private User makeDefaultUser() {
         return new User(
                 0,
@@ -298,6 +369,10 @@ public class UserControllerTest {
 
     private User addDefaultUser() {
         return restTemplate.postForObject(getActualURI(), makeDefaultUser(), User.class);
+    }
+
+    private Film addDefaultFilm() {
+        return restTemplate.postForObject("http://localhost:" + port + "/films", makeDefaultFilm(), Film.class);
     }
 
     private String getActualURI() {

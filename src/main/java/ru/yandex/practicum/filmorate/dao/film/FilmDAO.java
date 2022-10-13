@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -12,20 +11,25 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dao.director.DirectorDAO;
+import ru.yandex.practicum.filmorate.dao.feed.FeedDAO;
 import ru.yandex.practicum.filmorate.dao.genre.GenreDAO;
 import ru.yandex.practicum.filmorate.dao.mpa.MpaDAO;
+import ru.yandex.practicum.filmorate.exception.director.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.like.LikeAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.like.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.service.film.SearchBy;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.sql.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository("FilmDAO")
 @Primary
@@ -35,13 +39,16 @@ public class FilmDAO implements FilmStorage {
     private final JdbcTemplate template;
     private final GenreDAO genreDAO;
     private final MpaDAO mpaDAO;
+    private final DirectorDAO directorDAO;
+    private final FeedDAO feed;
 
     @Override
     public Film getFilm(int id) {
         Film film;
         try {
             film = template.queryForObject("SELECT * FROM \"films\"" +
-                            "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\" WHERE \"film_id\" = " + id,
+                            "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\" " +
+                            "WHERE \"film_id\" = " + id,
                     new FilmMapper());
         } catch (DataAccessException e) {
             throw new FilmNotFoundException(String.format("Ошибка получения: фильм с id=%d не найден.", id));
@@ -54,6 +61,42 @@ public class FilmDAO implements FilmStorage {
     public Collection<Film> getFilms() {
         return template.query("SELECT * FROM \"films\" " +
                 "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\"", new FilmMapper());
+    }
+
+    @Override
+    public Collection<Film> getDirectorFilms(int id) {
+        try {
+            template.queryForObject("SELECT \"director_id\" " +
+                    "FROM \"directors\" WHERE \"director_id\" = " + id, Integer.class);
+        } catch (DataAccessException e) {
+            throw new DirectorNotFoundException(String.format("Режиссер с id=%d не найден.", id));
+        }
+
+        return template.query("SELECT * FROM \"films\"" +
+                "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\"" +
+                "WHERE \"film_id\" IN (" +
+                    "SELECT \"film_id\" " +
+                    "FROM \"film_directors\"" +
+                    "WHERE \"director_id\" = " + id + ")", new FilmMapper());
+    }
+
+    @Override
+    public Collection<Film> getCommonFilms(int firstUserId, int secondUserId) {
+        String sql = "SELECT \"film_id\" FROM \"likes\" WHERE \"from_user_id\" = ?";
+
+        List<Integer> likedFilms1 = template.query(sql, (rs, rowNum) -> rs.getInt("film_id"), firstUserId);
+        List<Integer> likedFilms2 = template.query(sql, (rs, rowNum) -> rs.getInt("film_id"), secondUserId);
+        String[] sharedFilms = likedFilms1.stream()
+                .filter(likedFilms2::contains)
+                .map(String::valueOf)
+                .toArray(String[]::new);
+        String argsList = String.join(",", sharedFilms);
+
+        sql = String.format("SELECT * FROM \"films\" " +
+                "JOIN \"mpa_rating\" mr ON \"films\".\"mpa_id\" = mr.\"mpa_id\" " +
+                "WHERE \"film_id\" IN (%s)", argsList);
+
+        return template.query(sql, new FilmMapper());
     }
 
     @Override
@@ -77,7 +120,17 @@ public class FilmDAO implements FilmStorage {
     }
 
     @Override
-    public int addFilm(Film film) {
+    public Director getDirector(int id) {
+        return directorDAO.getDirector(id);
+    }
+
+    @Override
+    public Collection<Director> getDirectors() {
+        return directorDAO.getDirectors();
+    }
+
+    @Override
+    public Film addFilm(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         Number id;
 
@@ -89,7 +142,8 @@ public class FilmDAO implements FilmStorage {
                             "\"release_date\", " +
                             "\"duration\", " +
                             "\"rate\"," +
-                            "\"mpa_id\") VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+                            "\"mpa_id\") " +
+                            "VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, film.getName());
             ps.setString(2, film.getDescription());
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
@@ -105,7 +159,11 @@ public class FilmDAO implements FilmStorage {
         }
 
         genreDAO.insertGenres(film, id.intValue());
-        return id.intValue();
+        directorDAO.pairFilmsWithDirectors(id.intValue(),
+                film.getDirectors().stream()
+                        .map(Director::getId)
+                        .collect(Collectors.toList()));
+        return getFilm(id.intValue());
     }
 
     @Override
@@ -117,12 +175,9 @@ public class FilmDAO implements FilmStorage {
         }
 
         try {
-            template.update("INSERT INTO \"likes\" (\"film_id\", \"from_user_id\") " +
+            template.update("MERGE INTO \"likes\" (\"film_id\", \"from_user_id\") " +
                     "VALUES (?, ?)", targetFilmId, userId);
-        } catch (DuplicateKeyException e) {
-            throw new LikeAlreadyAddedException(
-                    String.format("Ошибка при добавлении лайка для фильма с id=%d " +
-                            "от пользователя с id=%d: лайк уже добавлен.", userId, targetFilmId));
+            feed.addLikeEvent(userId, targetFilmId);
 
         } catch (DataIntegrityViolationException e) {
             throw new UserNotFoundException(
@@ -131,8 +186,12 @@ public class FilmDAO implements FilmStorage {
         }
     }
 
+    public Director addDirector(Director director) {
+        return directorDAO.addDirector(director);
+    }
+
     @Override
-    public void updateFilm(Film film, int id) {
+    public Film updateFilm(Film film, int id) {
         Integer responseId = getIdFromDB(id);
 
         if (responseId == null) {
@@ -156,7 +215,23 @@ public class FilmDAO implements FilmStorage {
                 id);
 
         template.update("DELETE FROM \"film_genres\" WHERE \"film_id\" = ?", id);
+        template.update("DELETE FROM \"film_directors\" Where \"film_id\" = ?", id);
         genreDAO.insertGenres(film, id);
+        directorDAO.pairFilmsWithDirectors(id,
+                film.getDirectors().stream()
+                        .map(Director::getId)
+                        .collect(Collectors.toList()));
+        return getFilm(film.getId());
+    }
+
+    @Override
+    public void removeDirector(int id) {
+        directorDAO.removeDirector(id);
+    }
+
+    @Override
+    public Director updateDirector(Director director) {
+        return directorDAO.updateDirector(director);
     }
 
     @Override
@@ -180,6 +255,56 @@ public class FilmDAO implements FilmStorage {
 
         template.update("DELETE FROM \"likes\" WHERE \"film_id\" = ? AND \"from_user_id\" = ?",
                 targetFilmId, userId);
+        feed.removeLikeEvent(userId, targetFilmId);
+    }
+
+    @Override
+    public Collection<Film> getFilmRecommendation(int userId) {
+        String sqlQuery = "SELECT * FROM \"films\" as f" +
+                " LEFT JOIN \"mpa_rating\" as mr ON f.\"mpa_id\" = mr.\"mpa_id\"" +
+                " WHERE f.\"film_id\" in (select \"film_id\" from \"likes\"" +
+        " where \"film_id\" in (select \"film_id\"" +
+                " where (select \"from_user_id\" from \"likes\"" +
+                        " where \"film_id\" IN (select \"film_id\" from \"likes\"" +
+                                " where \"from_user_id\"= ?) and \"from_user_id\" not in (?))" +
+                " and \"film_id\" not IN (select \"film_id\" from \"likes\"" +
+                        " where \"from_user_id\"= ?)))";
+
+        return template.query(sqlQuery, new FilmMapper(), userId, userId, userId);
+    }
+
+    @Override
+    public void removeFilm(int id) {
+        Integer responseId = getIdFromDB(id);
+
+        if (responseId == null) {
+            throw new FilmNotFoundException(String.format("Ошибка удаления: фильм с id=%d не найден.", id));
+        }
+
+        template.update("DELETE FROM \"films\" WHERE \"film_id\" = ? ", id);
+    }
+
+    public Collection<Film> searchFilms(String query, SearchBy searchBy) {
+        String director = null;
+        String title = null;
+
+        if (searchBy == SearchBy.DIRECTOR) {
+            director = "'%" + query.toLowerCase() + "%'";
+
+        } else if (searchBy == SearchBy.TITLE) {
+            title = "'%" + query.toLowerCase() + "%'";
+
+        } else {
+            director = "'%" + query.toLowerCase() + "%'";
+            title = director;
+        }
+
+        return template.query("SELECT * FROM \"films\" f " +
+                "LEFT JOIN \"mpa_rating\" mr ON f.\"mpa_id\" = mr.\"mpa_id\" " +
+                "LEFT JOIN \"film_directors\" fd ON f.\"film_id\" = fd.\"film_id\" " +
+                "LEFT JOIN \"directors\" d ON fd.\"director_id\" = d.\"director_id\" " +
+                "WHERE LOWER(f.\"film_name\") LIKE " + title +
+                " OR LOWER(d.\"director_name\") LIKE " + director, new FilmMapper());
     }
 
     private Integer getIdFromDB(int id) {
@@ -203,11 +328,26 @@ public class FilmDAO implements FilmStorage {
         }
     }
 
+    private void addDirectorsIdsToDTO(Film film, int id) {
+        SqlRowSet rowSet = template.queryForRowSet(
+                "SELECT * FROM \"directors\"" +
+                        "WHERE \"director_id\" IN (" +
+                            "(SELECT DISTINCT \"director_id\" " +
+                            "FROM \"film_directors\" " +
+                            "WHERE \"film_id\" = ?))", id);
+
+        while (rowSet.next()) {
+            film.addDirector(new Director(
+                    rowSet.getInt("director_id"),
+                    rowSet.getString("director_name")
+            ));
+        }
+    }
+
     class FilmMapper implements RowMapper<Film> {
         @Override
         public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
             int filmId = rs.getInt("film_id");
-            int mpaId = rs.getInt("mpa_id");
 
             Film film = new Film(filmId,
                     rs.getString("film_name"),
@@ -215,13 +355,14 @@ public class FilmDAO implements FilmStorage {
                     rs.getDate("release_date").toLocalDate(),
                     rs.getInt("duration"),
                     rs.getInt("rate"),
-                    new MPA(mpaId, rs.getString("mpa_name")));
+                    new MPA(rs.getInt("mpa_id"), rs.getString("mpa_name")));
 
             List<Genre> genres = genreDAO.getFilmGenres(filmId);
             for (Genre genre : genres) {
                 film.addGenre(genre);
             }
             addLikesToDTO(film, filmId);
+            addDirectorsIdsToDTO(film, filmId);
 
             return film;
         }

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dao.film;
 
 import lombok.AllArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -11,11 +12,13 @@ import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.dao.user.UserDAO;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,13 +34,18 @@ public class FilmDAOTest {
     FilmDAO filmStorage;
     UserDAO userStorage;
 
+    @BeforeEach
+    public void addDirector() {
+        Director director = new Director(1, "Famous Director");
+        filmStorage.addDirector(director);
+    }
+
     @Test
     public void addAndGetFilmTest() {
         Film film = makeDefaultFilm();
-        filmStorage.addFilm(film);
         film.setId(1);
 
-        assertEquals(film, filmStorage.getFilm(1));
+        assertEquals(film, filmStorage.addFilm(film));
     }
 
     @Test
@@ -126,8 +134,53 @@ public class FilmDAOTest {
     }
 
     @Test
+    public void removeFilmTest() {
+        Film film = makeDefaultFilm();
+        User user = makeDefaultUser();
+        filmStorage.addFilm(film);
+        film.setId(1);
+        assertEquals(film, filmStorage.getFilm(1));
+        userStorage.addUser(user);
+        user.setId(1);
+        filmStorage.addLike(1, 1);
+
+        filmStorage.removeFilm(1);
+        assertThrows(FilmNotFoundException.class, () -> filmStorage.getFilm(1));
+        assertThrows(FilmNotFoundException.class, () -> filmStorage.removeLike(1, 1));
+        assertEquals(user, userStorage.getUser(1));
+    }
+
+    @Test
     public void shouldThrowExceptionForRemovingNonExistentLike() {
         assertThrows(FilmNotFoundException.class, () -> filmStorage.removeLike(1, 1));
+    }
+
+    @Test
+    public void getFilmRecommendationTest() {
+        Film film1 = makeDefaultFilm();
+        film1.setId(1);
+        Film film2 = makeDefaultFilm();
+        film2.setId(2);
+        Film film3 = makeDefaultFilm();
+        film3.setId(3);
+        User user1 = makeDefaultUser();
+        user1.setId(1);
+        User user2 = makeDefaultUser();
+        user2.setId(2);
+        filmStorage.addFilm(film1);
+        filmStorage.addFilm(film2);
+        filmStorage.addFilm(film3);
+        userStorage.addUser(user1);
+        userStorage.addUser(user2);
+
+        filmStorage.addLike(1, 1);
+        filmStorage.addLike(1, 2);
+        filmStorage.addLike(2, 2);
+        filmStorage.addLike(3, 2);
+
+        Collection<Film> filmRecommendation = filmStorage.getFilmRecommendation(user1.getId());
+        assertNotNull(filmRecommendation);
+        assertEquals(2, filmRecommendation.size());
     }
 
     private Film makeDefaultFilm() {

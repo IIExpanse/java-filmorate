@@ -19,14 +19,14 @@ import java.util.Set;
 public class User {
 
     private int id;
-    @NotBlank
-    @Email
+    @NotBlank(message = "E-mail пользователя не может быть пустым.")
+    @Email(message = "Некорректный формат e-mail.")
     private final String email;
-    @NotBlank
-    @NoWhitespaceConstraint
+    @NotBlank(message = "Логин не может быть пустым.")
+    @NoWhitespaceConstraint(message = "Логин не может содержать пробелов.")
     private final String login;
     private String name;
-    @PastOrPresent
+    @PastOrPresent(message = "Дата рождения не может быть в будущем.")
     private final LocalDate birthday;
     @JsonIgnore
     private final Set<Integer> friendsIds = new HashSet<>();

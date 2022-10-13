@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service.user.impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.dao.feed.FeedDAO;
 import ru.yandex.practicum.filmorate.exception.friend.FriendAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.friend.FriendNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -16,6 +17,7 @@ public class InMemoryUserServiceTest {
 
     InMemoryUserStorage storage;
     InMemoryUserService service;
+    FeedDAO feed;
     User user1;
     User user2;
 
@@ -34,7 +36,7 @@ public class InMemoryUserServiceTest {
                 "",
                 LocalDate.parse("1978-08-20"));
         storage = new InMemoryUserStorage();
-        service = new InMemoryUserService(storage);
+        service = new InMemoryUserService(storage, feed);
         storage.addUser(user1);
         storage.addUser(user2);
     }

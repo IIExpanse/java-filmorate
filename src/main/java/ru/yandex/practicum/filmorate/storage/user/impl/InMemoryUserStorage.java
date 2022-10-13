@@ -31,12 +31,12 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public int addUser(User user) {
+    public User addUser(User user) {
         int id = generateNewId();
 
         user.setId(id);
         usersMap.put(id, user);
-        return user.getId();
+        return user;
     }
 
     @Override
@@ -46,19 +46,25 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void updateUser(User user, int id) {
+    public User updateUser(User user, int id) {
         if (usersMap.containsKey(id)) {
             user.setId(id);
             usersMap.put(id, user);
 
         } else throw new UserNotFoundException(
                     String.format("Ошибка обновления: пользователь с id=%d не найден.", id));
+        return user;
     }
 
     @Override
     public void removeFriend(int targetUserId, int friendId) {
         User user = getUser(targetUserId);
         user.removeFriend(friendId);
+    }
+
+    @Override
+    public void removeUser(int id) {
+        usersMap.remove(id);
     }
 
     private int generateNewId() {

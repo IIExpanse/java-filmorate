@@ -2,11 +2,14 @@ package ru.yandex.practicum.filmorate.service.user.impl;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.feed.FeedDAO;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,9 +17,12 @@ import java.util.stream.Collectors;
 public class InMemoryUserService implements UserService {
 
     protected final UserStorage storage;
+    protected final FeedDAO feed;
 
-    public InMemoryUserService(@Qualifier("InMemoryUserStorage") UserStorage storage) {
+    public InMemoryUserService(@Qualifier("InMemoryUserStorage") UserStorage storage,
+                               @Qualifier("FeedDAO") FeedDAO feed) {
         this.storage = storage;
+        this.feed = feed;
     }
 
     @Override
@@ -52,7 +58,14 @@ public class InMemoryUserService implements UserService {
     }
 
     @Override
-    public int addUser(User user) {
+    public Collection<Feed> getUserFeed(int userId) {
+        return feed.getUserFeed(userId).stream()
+                .sorted(Comparator.comparing(Feed::getEventId))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public User addUser(User user) {
         return storage.addUser(user);
     }
 
@@ -64,8 +77,8 @@ public class InMemoryUserService implements UserService {
     }
 
     @Override
-    public void updateUser(User user, int id) {
-        storage.updateUser(user, id);
+    public User updateUser(User user, int id) {
+        return storage.updateUser(user, id);
     }
 
     @Override
@@ -73,5 +86,10 @@ public class InMemoryUserService implements UserService {
         User user = storage.getUser(targetUserId);
 
         user.removeFriend(friendId);
+    }
+
+    @Override
+    public void removeUser(int id) {
+        storage.removeUser(id);
     }
 }

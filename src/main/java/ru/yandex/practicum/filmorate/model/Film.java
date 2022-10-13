@@ -22,18 +22,19 @@ import java.util.Set;
 public class Film {
 
     private int id;
-    @NotBlank
+    @NotBlank(message = "Название фильма не может быть пустым.")
     private final String name;
-    @Size(max = 200)
+    @Size(max = 200, message = "Описание фильма не может быть длиннее 200 символов.")
     private final String description;
     @ReleaseDateConstraint(year = 1895, month = 12, day = 28)
     private final LocalDate releaseDate;
-    @Positive
+    @Positive(message = "Длительность фильма должна быть больше нуля.")
     private final int duration;
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private int rate;
     private final MPA mpa;
     private final List<Genre> genres = new ArrayList<>();
+    private final List<Director> directors = new ArrayList<>();
     @JsonIgnore
     private final Set<Integer> likes = new HashSet<>();
 
@@ -58,6 +59,10 @@ public class Film {
 
     public void addGenre(Genre g) {
         genres.add(g);
+    }
+
+    public void addDirector(Director d) {
+        directors.add(d);
     }
 
     private void updateRate() {

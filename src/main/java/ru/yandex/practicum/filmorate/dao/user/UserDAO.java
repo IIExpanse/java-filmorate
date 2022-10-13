@@ -11,6 +11,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dao.feed.FeedDAO;
 import ru.yandex.practicum.filmorate.exception.friend.FriendAlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.friend.FriendNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
@@ -26,6 +27,7 @@ import java.util.Collection;
 public class UserDAO implements UserStorage {
 
     private final JdbcTemplate template;
+    private final FeedDAO feed;
 
     @Override
     public User getUser(int id) {
@@ -40,7 +42,10 @@ public class UserDAO implements UserStorage {
         SqlRowSet rowSet = template.queryForRowSet(
                 "SELECT \"to_user_id\" FROM \"friendships_sent\" WHERE \"from_user_id\" = ?", id);
         while (rowSet.next()) {
-            user.addFriend(rowSet.getInt("to_user_id"));
+            if (user != null) {
+                user.addFriend(rowSet.getInt("to_user_id"));
+
+            } else throw new RuntimeException("Ошибка при получении пользователя.");
         }
 
         return user;
@@ -52,7 +57,7 @@ public class UserDAO implements UserStorage {
     }
 
     @Override
-    public int addUser(User user) {
+    public User addUser(User user) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         Number id;
 
@@ -69,7 +74,7 @@ public class UserDAO implements UserStorage {
 
         id = keyHolder.getKey();
         if (id != null) {
-            return id.intValue();
+            return getUser(id.intValue());
 
         } else throw new RuntimeException("Ошибка: пользователь не был добавлен.");
     }
@@ -81,6 +86,7 @@ public class UserDAO implements UserStorage {
                 targetUserId, friendId);
 
         if (rowSet.next()) {
+            feed.addFriendEvent(targetUserId, friendId);
             throw new FriendAlreadyAddedException(
                     String.format("Ошибка при добавлении друга для пользователя с id=%d: " +
                             "друг с id=%d уже добавлен.", targetUserId, friendId)
@@ -90,6 +96,7 @@ public class UserDAO implements UserStorage {
         try {
             template.update("INSERT INTO \"friendships_sent\" (\"from_user_id\", \"to_user_id\")" +
                     "VALUES (?, ?)", targetUserId, friendId);
+            feed.addFriendEvent(targetUserId, friendId);
         } catch (DataIntegrityViolationException e) {
             throw new UserNotFoundException(String.format("Ошибка при добавлении друга с id=%d" +
                     " для пользователя с id=%d: один или оба пользователя не найдены.", friendId, targetUserId));
@@ -97,7 +104,7 @@ public class UserDAO implements UserStorage {
     }
 
     @Override
-    public void updateUser(User user, int id) {
+    public User updateUser(User user, int id) {
         Integer responseId = getUserIdFromDB(id);
 
         if (responseId == null) {
@@ -112,6 +119,7 @@ public class UserDAO implements UserStorage {
                 user.getName(),
                 user.getBirthday(),
                 id);
+        return getUser(user.getId());
     }
 
     @Override
@@ -135,6 +143,19 @@ public class UserDAO implements UserStorage {
         }
         template.update("DELETE FROM \"friendships_sent\" WHERE \"from_user_id\" = ? AND \"to_user_id\" = ?",
                 targetUserId, friendId);
+        feed.removeFriendEvent(targetUserId, friendId);
+    }
+
+    @Override
+    public void removeUser(int id) {
+        Integer responseId = getUserIdFromDB(id);
+
+        if (responseId == null) {
+            throw new UserNotFoundException(
+                    String.format("Ошибка удаления: пользователь с id=%d не найден.", id));
+        }
+
+        template.update("DELETE FROM \"users\" WHERE \"user_id\" = ?", id);
     }
 
     private Integer getUserIdFromDB(int id) {
